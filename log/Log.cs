@@ -1,8 +1,9 @@
+using System.Data;
 using AutoAppdater.Language;
 
 namespace AutoAppdater.Log
 {
-    enum LogOut
+    enum LogType
     {
         Internal,
         External,
@@ -10,15 +11,17 @@ namespace AutoAppdater.Log
     }
     public class Log
     {
-        LogOut logOut;
+        LogType logType;
         Language.Language? language;
         public bool AlwaysTranslate = false;
-        internal Log()
+        internal Log(LogType type)
         {
+            logType = type;
             language = null;
         }
-        internal Log(Language.Language language)
+        internal Log(LogType type, Language.Language language)
         {
+            logType = type;
             this.language = language;
         }
         string? LanguageConverter(string message)
@@ -26,37 +29,58 @@ namespace AutoAppdater.Log
             if (language != null) return language.Convert(message);
             else return null;
         }
-        public void Info(string message,bool translate)
+        string TimeInsert(string message)
         {
-            if (translate)
-            {
-                string? lang = LanguageConverter(message);
-                if (lang != null) message = lang;
-            }
+            DateTime dt = DateTime.Now;
+            return "[" + dt.ToString("yyyy-MM/dd HH:mm::ss") + "] " + message;
         }
-        public void Error(string message,bool translate)
+        void Logging(string message)
         {
-            if (translate)
-            {
-                string? lang = LanguageConverter(message);
-                if (lang != null) message = lang;
-            }
+            
         }
-        public void Guide(string message,bool translate)
+        public void Info(string message, bool translate)
         {
             if (translate)
             {
                 string? lang = LanguageConverter(message);
                 if (lang != null) message = lang;
             }
+            message = message.Insert(0, "[info]");
+            message = TimeInsert(message);
+            Logging(message);
         }
-        public void Warning(string message,bool translate)
+        public void Error(string message, bool translate)
         {
             if (translate)
             {
                 string? lang = LanguageConverter(message);
                 if (lang != null) message = lang;
             }
+            message = message.Insert(0, "[error]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Guide(string message, bool translate)
+        {
+            if (translate)
+            {
+                string? lang = LanguageConverter(message);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[guide]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Warning(string message, bool translate)
+        {
+            if (translate)
+            {
+                string? lang = LanguageConverter(message);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[warn]");
+            message = TimeInsert(message);
+            Logging(message);
         }
         public void Info(string message)
         {
@@ -65,6 +89,9 @@ namespace AutoAppdater.Log
                 string? lang = LanguageConverter(message);
                 if (lang != null) message = lang;
             }
+            message = message.Insert(0, "[info]");
+            message = TimeInsert(message);
+            Logging(message);
         }
         public void Error(string message)
         {
@@ -73,6 +100,9 @@ namespace AutoAppdater.Log
                 string? lang = LanguageConverter(message);
                 if (lang != null) message = lang;
             }
+            message = message.Insert(0, "[error]");
+            message = TimeInsert(message);
+            Logging(message);
         }
         public void Guide(string message)
         {
@@ -81,6 +111,9 @@ namespace AutoAppdater.Log
                 string? lang = LanguageConverter(message);
                 if (lang != null) message = lang;
             }
+            message = message.Insert(0, "[guide]");
+            message = TimeInsert(message);
+            Logging(message);
         }
         public void Warning(string message)
         {
@@ -89,6 +122,9 @@ namespace AutoAppdater.Log
                 string? lang = LanguageConverter(message);
                 if (lang != null) message = lang;
             }
+            message = message.Insert(0, "[warn]");
+            message = TimeInsert(message);
+            Logging(message);
         }
     }
 }

@@ -1,0 +1,4 @@
+namespace AutoAppdater.File
+{
+    
+}
