@@ -4,7 +4,6 @@ using AutoAppdater.Common;
 namespace AutoAppdater.Command
 {
     //CommandManageSystem Ver1.0 Release 2025/7/19
-    #region Classes
     public enum CommandType
     {
         //Initial,
@@ -16,13 +15,13 @@ namespace AutoAppdater.Command
     }
     public class EventHandler
     {
-        public delegate Task<CommandResponse?> baseDelegate0();
+        public delegate CommandResponse? baseDelegate0();
         public event baseDelegate0? CallStepEventHandler0;
-        public delegate Task<CommandResponse?> baseDelegate1(string?[] value);
+        public delegate CommandResponse? baseDelegate1(string?[] value);
         public event baseDelegate1? CallStepEventHandler1;
-        public delegate Task<CommandResponse?> baseDelegate2(IReadOnlyCommandComponent components);
+        public delegate CommandResponse? baseDelegate2(IReadOnlyCommandComponent components);
         public event baseDelegate2? CallStepEventHandler2;
-        public delegate Task<CommandResponse?> baseDelegate3(string[] args);
+        public delegate CommandResponse? baseDelegate3(string[] args);
         public event baseDelegate2? CallStepEventHandler3;
         public (baseDelegate0? del0, baseDelegate1? del1, baseDelegate2? del2, baseDelegate2? del3) getEventHandler()
         {
@@ -43,15 +42,15 @@ namespace AutoAppdater.Command
             else
                 return false;
         }
-        internal async Task<CommandResponse?> Call(IReadOnlyCommandComponent component)
+        internal CommandResponse? Call(IReadOnlyCommandComponent component)
         {
             CommandResponse? res = null;
             if (CallStepEventHandler0 != null)
             {
-                IEnumerable<Task<CommandResponse?>> tas = CallStepEventHandler0.GetInvocationList().OfType<baseDelegate0>().Select(async (x) => { return await x.Invoke(); });
-                foreach (Task<CommandResponse?> t in tas)
+                IEnumerable<CommandResponse?> tas = CallStepEventHandler0.GetInvocationList().OfType<baseDelegate0>().Select((x) => { return x.Invoke(); });
+                foreach (CommandResponse? t in tas)
                 {
-                    CommandResponse? resp = await t;
+                    CommandResponse? resp = t;
                     if (resp != null)
                     {
                         res = resp;
@@ -86,10 +85,10 @@ namespace AutoAppdater.Command
                     if (target.Components.Length == 0) break;
                     else target = target.Components[0];
                 }
-                IEnumerable<Task<CommandResponse?>> tas = CallStepEventHandler1.GetInvocationList().OfType<baseDelegate1>().Select(async (x) => { return await x.Invoke(value.ToArray()); });
-                foreach (Task<CommandResponse?> t in tas)
+                IEnumerable<CommandResponse?> tas = CallStepEventHandler1.GetInvocationList().OfType<baseDelegate1>().Select((x) => { return x.Invoke(value.ToArray()); });
+                foreach (CommandResponse? t in tas)
                 {
-                    CommandResponse? resp = await t;
+                    CommandResponse? resp = t;
                     if (resp != null)
                     {
                         res = resp;
@@ -101,10 +100,10 @@ namespace AutoAppdater.Command
             }
             if (CallStepEventHandler2 != null)
             {
-                IEnumerable<Task<CommandResponse?>> tas = CallStepEventHandler2.GetInvocationList().OfType<baseDelegate2>().Select(async (x) => { return await x.Invoke(component); });
-                foreach (Task<CommandResponse?> t in tas)
+                IEnumerable<CommandResponse?> tas = CallStepEventHandler2.GetInvocationList().OfType<baseDelegate2>().Select((x) => { return x.Invoke(component); });
+                foreach (CommandResponse? t in tas)
                 {
-                    CommandResponse? resp = await t;
+                    CommandResponse? resp = t;
                     if (resp != null)
                     {
                         res = resp;
@@ -139,10 +138,10 @@ namespace AutoAppdater.Command
                     if (target.Components.Length == 0) break;
                     else target = target.Components[0];
                 }
-                IEnumerable<Task<CommandResponse?>> tas = CallStepEventHandler3.GetInvocationList().OfType<baseDelegate3>().Select(async (x) => { return await x.Invoke(args.ToArray()); });
-                foreach (Task<CommandResponse?> t in tas)
+                IEnumerable<CommandResponse?> tas = CallStepEventHandler3.GetInvocationList().OfType<baseDelegate3>().Select((x) => { return x.Invoke(args.ToArray()); });
+                foreach (CommandResponse? t in tas)
                 {
-                    CommandResponse? resp = await t;
+                    CommandResponse? resp = t;
                     if (resp != null)
                     {
                         res = resp;
@@ -368,11 +367,15 @@ namespace AutoAppdater.Command
         public string mostMatch { get; }
         public string[] mostMatchArgs { get; }
         public string[][] mostMatchFullArgs { get; }
-        public Candidacies(string mostMatch, string[] mostMatchArgs, string[][] mostMatchFullArgs)
+        internal Candidacies(string mostMatch, string[] mostMatchArgs, string[][] mostMatchFullArgs)
         {
             this.mostMatch = mostMatch;
             this.mostMatchArgs = mostMatchArgs;
             this.mostMatchFullArgs = mostMatchFullArgs;
+        }
+        public Candidacies ToCandidacies()
+        {
+            return new Candidacies(mostMatch, mostMatchArgs, mostMatchFullArgs);
         }
     }
     public enum DisplayOption
@@ -380,8 +383,7 @@ namespace AutoAppdater.Command
         Ladder,
         Column,
     }
-    #endregion
-    public static class CommandTools
+    public static class CommandSet
     {
         //static CommandComponent[] Components { get{ return components.ToArray(); } }
         static Log.Log log = Common.Common.DefaultLogHost;
@@ -1716,11 +1718,11 @@ namespace AutoAppdater.Command
             }
             log.Info(outline);
         }
-        internal static async Task<CommandResponse?> CallCommandComponent(CommandComponent component, IReadOnlyCommandComponent readOnlyCommandComponent)
+        internal static CommandResponse? CallCommandComponent(CommandComponent component, IReadOnlyCommandComponent readOnlyCommandComponent)
         {
-            return await component.Handler.Call(readOnlyCommandComponent);
+            return component.Handler.Call(readOnlyCommandComponent);
         }
-        public static async Task<CommandResponse?> CallCommandComponent(string[] args)
+        public static CommandResponse? CallCommandComponent(string[] args)
         {
             foreach (CommandComponent component in components)
             {
@@ -1749,7 +1751,7 @@ namespace AutoAppdater.Command
                                 {
                                     if (itarget[level].Components[taskc[level]].Components.Length == 0)
                                     {
-                                        return await itarget[level].Components[taskc[level]].Handler.Call(com);
+                                        return itarget[level].Components[taskc[level]].Handler.Call(com);
                                     }
                                 }
                                 taskc.Add(0);
@@ -1777,7 +1779,7 @@ namespace AutoAppdater.Command
             }
             return null;
         }
-        public static async Task<CommandResponse?> CallCommandComponent(string[] args, CallOption option)
+        public static CommandResponse? CallCommandComponent(string[] args, CallOption option)
         {
             foreach (CommandComponent component in components)
             {
@@ -1806,11 +1808,11 @@ namespace AutoAppdater.Command
                                 {
                                     if (option == CallOption.Perfect && itarget[level].Components[taskc[level]].Components.Length == 0)
                                     {
-                                        return await itarget[level].Components[taskc[level]].Handler.Call(com);
+                                        return itarget[level].Components[taskc[level]].Handler.Call(com);
                                     }
                                     else if (option == CallOption.PerfectStep)
                                     {
-                                        return await itarget[level].Components[taskc[level]].Handler.Call(com);
+                                        return itarget[level].Components[taskc[level]].Handler.Call(com);
                                     }
                                 }
                                 taskc.Add(0);
@@ -1827,7 +1829,7 @@ namespace AutoAppdater.Command
                                 {
                                     if (option == CallOption.MatchStep && option == CallOption.MatchTop)
                                     {
-                                        return await itarget[level].Components[taskc[level]].Handler.Call(com);
+                                        return itarget[level].Components[taskc[level]].Handler.Call(com);
                                     }
                                     else
                                     {
