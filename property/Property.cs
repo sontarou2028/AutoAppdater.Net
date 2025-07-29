@@ -7,7 +7,7 @@ namespace AutoAppdater.Property
         public static PropertyGroup? PropertyBuild(string inline)
         {
             List<Property> properties = [];
-            List<IReadOnlyProperty> readOnlies = [];
+            List<ReadOnlyProperty> readOnlies = [];
             inline = inline.Replace("\r", "");
             string nothing = "";
             string[] reverse = { "\n" };
@@ -127,12 +127,12 @@ namespace AutoAppdater.Property
                             val.StrValue = unspaced;
                         }
                     }
-                    if (readOnly) readOnlies.Add(new IReadOnlyProperty(s.Substring(0, startLen), currendAttribute, val));
+                    if (readOnly) readOnlies.Add(new ReadOnlyProperty(s.Substring(0, startLen), currendAttribute, val));
                     else properties.Add(new Property(s.Substring(0, startLen), currendAttribute, val));
                 }
                 else
                 {
-                    if(readOnly) readOnlies.Add(new IReadOnlyProperty(s, currendAttribute, new Value()));
+                    if(readOnly) readOnlies.Add(new ReadOnlyProperty(s, currendAttribute, new Value()));
                     else properties.Add(new Property(s, currendAttribute, new Value()));
                 }
             }
@@ -171,7 +171,7 @@ namespace AutoAppdater.Property
                     (p.Value.IntValue == null ? nullstr : p.Value.IntValue) +
                     (p.Value.BoolValue == null ? nullstr : p.Value.BoolValue) + chr_return;
                     attributes.Add(currentAttribute);
-                    foreach (IReadOnlyProperty irp in group.GetAllReadOnlyPropertyByAttribute(currentAttribute))
+                    foreach (ReadOnlyProperty irp in group.GetAllReadOnlyPropertyByAttribute(currentAttribute))
                     {
                         config += chr_readonly + irp.Name + ichole +
                         (irp.Value.StrValue == null ? nullstr : irp.Value.StrValue) +
@@ -185,7 +185,7 @@ namespace AutoAppdater.Property
             currentAttribute = nothing;
             config = nothing;
             flag = false;
-            IReadOnlyProperty[] readOnlies = group.ReadOnlyProperties;
+            ReadOnlyProperty[] readOnlies = group.ReadOnlyProperties;
             for (int i = 0; i < readOnlies.Length; i++)
             {
                 if (attributes.Contains(readOnlies[i].Attribute))
@@ -235,9 +235,9 @@ namespace AutoAppdater.Property
     public class PropertyGroup
     {
         public Property[] Properties { get { return prop.ToArray(); } }
-        public IReadOnlyProperty[] ReadOnlyProperties { get { return irProp.ToArray(); } }
+        public ReadOnlyProperty[] ReadOnlyProperties { get { return irProp.ToArray(); } }
         List<Property> prop = [];
-        List<IReadOnlyProperty> irProp = [];
+        List<ReadOnlyProperty> irProp = [];
         public PropertyGroup ToPropertyGroup()
         {
             return new PropertyGroup(Properties, ReadOnlyProperties);
@@ -247,11 +247,11 @@ namespace AutoAppdater.Property
         {
             prop = properties.ToList();
         }
-        public PropertyGroup(IReadOnlyProperty[] readOnlyProperties)
+        public PropertyGroup(ReadOnlyProperty[] readOnlyProperties)
         {
             irProp = readOnlyProperties.ToList();
         }
-        public PropertyGroup(Property[] properties, IReadOnlyProperty[] readOnlyProperties)
+        public PropertyGroup(Property[] properties, ReadOnlyProperty[] readOnlyProperties)
         {
             prop = properties.ToList();
             irProp = readOnlyProperties.ToList();
@@ -295,12 +295,12 @@ namespace AutoAppdater.Property
             }
             return count;
         }
-        public int SetReadOnlyProperty(IReadOnlyProperty property)
+        public int SetReadOnlyProperty(ReadOnlyProperty property)
         {
             irProp.Add(property);
             return prop.Count - 1;
         }
-        public int[] SetReadOnlyProperty(IReadOnlyProperty[] property)
+        public int[] SetReadOnlyProperty(ReadOnlyProperty[] property)
         {
             int startIndex = irProp.Count - 1;
             irProp.AddRange(property);
@@ -322,9 +322,9 @@ namespace AutoAppdater.Property
             }
             return null;
         }
-        public IReadOnlyProperty? GetReadOnlyPropertyByName(string name)
+        public ReadOnlyProperty? GetReadOnlyPropertyByName(string name)
         {
-            foreach (IReadOnlyProperty p in irProp)
+            foreach (ReadOnlyProperty p in irProp)
             {
                 if (name == p.Name)
                 {
@@ -344,9 +344,9 @@ namespace AutoAppdater.Property
             }
             return null;
         }
-        public IReadOnlyProperty? GetReadOnlyPropertyByValue(Value value)
+        public ReadOnlyProperty? GetReadOnlyPropertyByValue(Value value)
         {
-            foreach (IReadOnlyProperty p in irProp)
+            foreach (ReadOnlyProperty p in irProp)
             {
                 if (value.Certificater(p.Value))
                 {
@@ -371,10 +371,10 @@ namespace AutoAppdater.Property
             }
             else return [];
         }
-        public IReadOnlyProperty[] GetAllReadOnlyPropertyByAttribute(string attribute)
+        public ReadOnlyProperty[] GetAllReadOnlyPropertyByAttribute(string attribute)
         {
-            List<IReadOnlyProperty> list = new List<IReadOnlyProperty>();
-            foreach (IReadOnlyProperty p in irProp)
+            List<ReadOnlyProperty> list = new List<ReadOnlyProperty>();
+            foreach (ReadOnlyProperty p in irProp)
             {
                 if (attribute == p.Attribute)
                 {
@@ -403,10 +403,10 @@ namespace AutoAppdater.Property
             }
             else return [];
         }
-        public IReadOnlyProperty[] GetAllReadOnlyPropertyByName(string name)
+        public ReadOnlyProperty[] GetAllReadOnlyPropertyByName(string name)
         {
-            List<IReadOnlyProperty> list = new List<IReadOnlyProperty>();
-            foreach (IReadOnlyProperty p in irProp)
+            List<ReadOnlyProperty> list = new List<ReadOnlyProperty>();
+            foreach (ReadOnlyProperty p in irProp)
             {
                 if (name == p.Name)
                 {
@@ -435,10 +435,10 @@ namespace AutoAppdater.Property
             }
             return [];
         }
-        public IReadOnlyProperty[] GetAllReadOnlyPropertyByValue(Value value)
+        public ReadOnlyProperty[] GetAllReadOnlyPropertyByValue(Value value)
         {
-            List<IReadOnlyProperty> list = new List<IReadOnlyProperty>();
-            foreach (IReadOnlyProperty p in irProp)
+            List<ReadOnlyProperty> list = new List<ReadOnlyProperty>();
+            foreach (ReadOnlyProperty p in irProp)
             {
                 if (value.Certificater(p.Value))
                 {
@@ -566,12 +566,12 @@ namespace AutoAppdater.Property
         {
             return new Property(Name, Attribute, Value);
         }
-        public IReadOnlyProperty ToReadOnlyProperty()
+        public ReadOnlyProperty ToReadOnlyProperty()
         {
-            return new IReadOnlyProperty(Name, Attribute, Value);
+            return new ReadOnlyProperty(Name, Attribute, Value);
         }
     }
-    public class IReadOnlyProperty
+    public class ReadOnlyProperty
     {
         public string Name { get { return name; } }
         public string Attribute { get { return attribute; } }
@@ -579,12 +579,12 @@ namespace AutoAppdater.Property
         string name;
         string attribute;
         Value value = new Value();
-        public IReadOnlyProperty(string name, string attribute)
+        public ReadOnlyProperty(string name, string attribute)
         {
             this.name = name;
             this.attribute = attribute;
         }
-        public IReadOnlyProperty(string name, string attribute, Value value)
+        public ReadOnlyProperty(string name, string attribute, Value value)
         {
             this.name = name;
             this.attribute = attribute;
@@ -594,9 +594,9 @@ namespace AutoAppdater.Property
         {
             return new Property(Name, Attribute, Value);
         }
-        public IReadOnlyProperty ToReadOnlyProperty()
+        public ReadOnlyProperty ToReadOnlyProperty()
         {
-            return new IReadOnlyProperty(Name, Attribute, Value);
+            return new ReadOnlyProperty(Name, Attribute, Value);
         }
     }
 }

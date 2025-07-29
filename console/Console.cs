@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace AutoAppdater.Console
 {
     enum ChangeType
@@ -6,7 +8,7 @@ namespace AutoAppdater.Console
         Remove,
         Change,
     }
-    class DisplayInfo
+    internal class DisplayInfo
     {
         public int Priority;
         public string[] Sentences;
@@ -101,6 +103,22 @@ namespace AutoAppdater.Console
 
         }
         public void Add(string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+        {
+            
+        }
+        public void HideAt(int index)
+        {
+            
+        }
+        public void HideAll()
+        {
+
+        }
+        public void ShowAt(int index)
+        {
+            
+        }
+        public void ShowAll()
         {
             
         }

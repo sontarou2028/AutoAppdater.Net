@@ -7,34 +7,77 @@ namespace AutoAppdater.Interface
 {
     public static class Interface
     {
-        internal struct DefaultValue
+        struct ConfigValue
         {
             public const bool Candidacies_Enable = true;
             public const int Candidacies_GetCount = 10;
             public const int History_RegistCount = 10;
+            public const bool Password_Hide = true;
+            public const int Password_Timeout = 300000;//5min.
+        }
+        struct DefaultValue
+        {
+            public const string err_com_not_found = "Unknown command input.Type 'help' to list keywords.";
         }
         public static bool Observing { get { return observing; } }
+        public static bool PasswordObserving { get { return PasswordObserving;} }
+        static bool pswObserving = false;
         static bool observing = false;
         public static int[] ObservingRegion { get { return observingRegion.ToArray(); } }
         static List<int> observingRegion = [];
         static Log.Log log = Common.Common.DefaultLogHost;
         static PropertyGroup config = new PropertyGroup();
-        static Console.Console channel;
+        static Console.Console observerHost;
+        static Console.Console passwordHost;
         static CancellationTokenSource observerCts;
+        static bool observerPausing = false;
         static object obl = new object();
+        static object stateLocker = new object();
+        static void Call(string[] args)
+        {
+            CommandResponse? c = CommandSet.CallCommandComponent(args);
+            log.Error(DefaultValue.err_com_not_found);
+        }
         public static void BeginObserve(int displayChannel)
         {
-            if (observing) return;
-            observing = true;
-            observingRegion = [displayChannel];
-            Task t = Task.Run(() => Observer(), observerCts.Token);
+            lock (stateLocker)
+            {
+                if (observing) return;
+                observing = true;
+                observingRegion = [displayChannel];
+                Task t = Task.Run(() => Observer(), observerCts.Token);
+            }
         }
         public static void StopObserve()
         {
-            if (!observing) return;
-            observing = false;
-            observerCts.Cancel();
-            //ato syori
+            lock (stateLocker)
+            {
+                if (!observing) return;
+                observing = false;
+                observingRegion = [];
+                observerCts.Cancel();
+                observerHost.RemoveAll();
+            }
+        }
+        static void ResumeObserver()
+        {
+            lock (stateLocker)
+            {
+                if (!observing || !observerPausing) return;
+                observing = true;
+                Task t = Task.Run(() => Observer(), observerCts.Token);
+            }
+        }
+        static void PauseObserve()
+        {
+            lock (stateLocker)
+            {
+                if (!observing || observerPausing) return;
+                observing = false;
+                observerCts.Cancel();
+                observerHost.HideAll();
+                //ato shori
+            }
         }
         static void Observer()
         {
@@ -50,14 +93,14 @@ namespace AutoAppdater.Interface
                 const ConsoleKey backspace = ConsoleKey.Backspace;
                 const ConsoleKey space = ConsoleKey.Spacebar;
                 const ConsoleKey enter = ConsoleKey.Enter;
-                bool cand_enable = DefaultValue.Candidacies_Enable;
-                p = config.GetPropertyByName(nameof(DefaultValue.Candidacies_Enable));
+                bool cand_enable = ConfigValue.Candidacies_Enable;
+                p = config.GetPropertyByName(nameof(ConfigValue.Candidacies_Enable));
                 if (p != null && p.Value.BoolValue != null) cand_enable = (bool)p.Value.BoolValue;
-                int cand_count = DefaultValue.Candidacies_GetCount;
-                p = config.GetPropertyByName(nameof(DefaultValue.Candidacies_GetCount));
+                int cand_count = ConfigValue.Candidacies_GetCount;
+                p = config.GetPropertyByName(nameof(ConfigValue.Candidacies_GetCount));
                 if (p != null && p.Value.IntValue != null) cand_count = (int)p.Value.IntValue;
-                int hist_count = DefaultValue.History_RegistCount;
-                p = config.GetPropertyByName(nameof(DefaultValue.History_RegistCount));
+                int hist_count = ConfigValue.History_RegistCount;
+                p = config.GetPropertyByName(nameof(ConfigValue.History_RegistCount));
                 if (p != null && p.Value.IntValue != null) hist_count = (int)p.Value.IntValue;
                 string split = " ";
                 //loopValue
@@ -350,19 +393,78 @@ namespace AutoAppdater.Interface
                 }
             }
         }
-        static void Call(string[] args)
+        static string? PasswordInterruptor()
         {
-            const string err_com_not_found = "Unknown command input.Type 'help' to list keywords.";
-            CommandResponse? c = CommandSet.CallCommandComponent(args);
-            log.Error(err_com_not_found);
+            Property.Property? p;
+            const ConsoleKey backspace = ConsoleKey.Backspace;
+            const ConsoleKey space = ConsoleKey.Spacebar;
+            const ConsoleKey enter = ConsoleKey.Enter;
+            bool psw_hide = ConfigValue.Password_Hide;
+            p = config.GetPropertyByName(nameof(ConfigValue.Password_Hide));
+            if (p != null && p.Value.BoolValue != null) psw_hide = (bool)p.Value.BoolValue;
+            int psw_tout = ConfigValue.Password_Timeout;
+            p = config.GetPropertyByName(nameof(ConfigValue.Password_Timeout));
+            if (p != null && p.Value.IntValue != null) psw_tout = (int)p.Value.IntValue;
+            string split = " ";
+            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationTokenSource ctsd = new CancellationTokenSource();
+            bool entered = false;
+            //loopValue
+            string currentSentence = "";
+            int currentPosition = 0;
+            Task t = Task.Run(() =>
+            {
+                while (true)
+                {
+                    ConsoleKeyInfo info = System.Console.ReadKey(true);
+                    if (info.Key == backspace)
+                    {
+                        if (currentPosition > 0)
+                        {
+                            currentSentence = currentSentence.Remove(currentPosition - 1, 1);
+                            currentPosition--;
+                        }
+                    }
+                    else if (info.Key == space)
+                    {
+                        currentSentence.Insert(currentPosition, split);
+                        currentPosition++;
+                    }
+                    else if (info.Key == enter)
+                    {
+                        entered = true;
+                        ctsd.Cancel();
+                        break;
+                    }
+                    else
+                    {
+                        currentSentence.Insert(currentPosition, info.KeyChar.ToString());
+                        currentPosition++;
+                    }
+                }
+            }, cts.Token);
+            Task q =Task.Delay(psw_tout,ctsd.Token);
+            q.Wait();
+            if (!entered)
+            {
+                cts.Cancel();
+                return null;
+            }
+            else
+            {
+                return currentSentence;
+            }
         }
-        static void PasswordObserver()
+        public static string? PasswordInputRequest()
         {
-
-        }
-        public static string PasswordInputRequest()
-        {
-            
+            lock (stateLocker)
+            {
+                if (pswObserving) return null;
+                PauseObserve();
+                string? input = PasswordInterruptor();
+                ResumeObserver();
+                return input;
+            }
         }
     }
     public class CommandResponse
