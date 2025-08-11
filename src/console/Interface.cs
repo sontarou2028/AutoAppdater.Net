@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using AutoAppdater.Command;
 using AutoAppdater.Consoles;
 using AutoAppdater.Property;
@@ -27,11 +28,13 @@ namespace AutoAppdater.Interfaces
         static Log.Log log = Common.Common.DefaultLogHost;
         static PropertyGroup config = new PropertyGroup();
         static Consoles.Console observerHost = new Consoles.Console();
+        static Consoles.Console candHost = new Consoles.Console();
         static Consoles.Console passwordHost = new Consoles.Console();
         static CancellationTokenSource observerCts = new CancellationTokenSource();
         static bool observerPausing = false;
         static object obl = new object();
         static object stateLocker = new object();
+        static ObserverValue obsVal = new ObserverValue();
         static void Call(string[] args)
         {
             CommandResponse? c = CommandSet.CallCommandComponent(args);
@@ -42,6 +45,7 @@ namespace AutoAppdater.Interfaces
             lock (stateLocker)
             {
                 if (observing) return;
+                obsVal = new ObserverValue();
                 observing = true;
                 observingRegion = [displayChannel];
                 Task t = Task.Run(() => Observer(), observerCts.Token);
@@ -56,6 +60,7 @@ namespace AutoAppdater.Interfaces
                 observingRegion = [];
                 observerCts.Cancel();
                 observerHost.RemoveAll();
+                obsVal = new ObserverValue();
             }
         }
         static void ResumeObserver()
@@ -64,6 +69,7 @@ namespace AutoAppdater.Interfaces
             {
                 if (!observing || !observerPausing) return;
                 observing = true;
+                observerHost.ShowAll();
                 Task t = Task.Run(() => Observer(), observerCts.Token);
             }
         }
@@ -75,8 +81,17 @@ namespace AutoAppdater.Interfaces
                 observing = false;
                 observerCts.Cancel();
                 observerHost.HideAll();
-                //ato shori
             }
+        }
+        class ObserverValue
+        {
+            internal string currentSentence = "";
+            internal int currentPosition = 0;
+            internal List<string> history = [];
+            internal int historyLen = -1;
+            internal List<string> cand = [];
+            internal string candKeep = "";
+            internal int candLen = -1;
         }
         static void Observer()
         {
@@ -102,69 +117,65 @@ namespace AutoAppdater.Interfaces
                 p = config.GetPropertyByName(nameof(ConfigValue.History_RegistCount));
                 if (p != null && p.Value.IntValue != null) hist_count = (int)p.Value.IntValue;
                 string split = " ";
-                //loopValue
-                string currentSentence = "";
-                int currentPosition = 0;
-                List<string> history = [];
-                int historyLen = -1;
-                List<string> cand = [];
-                string candKeep = "";
-                int candLen = -1;
+                //init
+                if (observerHost.ColumnCount == 0) observerHost.Add("");
                 while (observing)
                 {
                     ConsoleKeyInfo info = System.Console.ReadKey(true);
                     if (info.Key == move_left)
                     {
-                        if (currentPosition > 0)
+                        if (obsVal.currentPosition > 0)
                         {
-                            currentPosition--;
+                            obsVal.currentPosition--;
                         }
                     }
                     else
                     if (info.Key == move_right)
                     {
-                        if (currentPosition < currentSentence.Length)
+                        if (obsVal.currentPosition < obsVal.currentSentence.Length)
                         {
-                            currentPosition++;
+                            obsVal.currentPosition++;
                         }
                     }
                     else
                     if (info.Key == hist_up)
                     {
-                        if (history.Count > 0)
+                        if (obsVal.history.Count > 0)
                         {
-                            if (historyLen < 0)
+                            if (obsVal.historyLen < 0)
                             {
-                                currentSentence = history[history.Count - 1];
-                                currentPosition = currentSentence.Length;
-                                historyLen = history.Count - 1;
-                                history.Add(currentSentence);
-                                if (history.Count > hist_count)
+                                obsVal.currentSentence = obsVal.history[obsVal.history.Count - 1];
+                                obsVal.currentPosition = obsVal.currentSentence.Length;
+                                obsVal.historyLen = obsVal.history.Count - 1;
+                                obsVal.history.Add(obsVal.currentSentence);
+                                if (obsVal.history.Count > hist_count)
                                 {
-                                    history.RemoveAt(0);
+                                    obsVal.history.RemoveAt(0);
                                 }
                             }
                             else
                             {
-                                if (historyLen > 0)
+                                if (obsVal.historyLen > 0)
                                 {
-                                    currentSentence = history[historyLen - 1];
-                                    currentPosition = currentSentence.Length;
-                                    historyLen--;
+                                    obsVal.currentSentence = obsVal.history[obsVal.historyLen - 1];
+                                    obsVal.currentPosition = obsVal.currentSentence.Length;
+                                    obsVal.historyLen--;
                                 }
                             }
+                            observerHost.ReplaceAt(0, obsVal.currentSentence);
                         }
                     }
                     else
                     if (info.Key == hist_down)
                     {
-                        if (history.Count > 0)
+                        if (obsVal.history.Count > 0)
                         {
-                            if (historyLen + 1 < history.Count)
+                            if (obsVal.historyLen + 1 < obsVal.history.Count)
                             {
-                                currentSentence = history[historyLen + 1];
-                                currentPosition = currentSentence.Length;
-                                historyLen++;
+                                obsVal.currentSentence = obsVal.history[obsVal.historyLen + 1];
+                                obsVal.currentPosition = obsVal.currentSentence.Length;
+                                obsVal.historyLen++;
+                                observerHost.ReplaceAt(0, obsVal.currentSentence);
                             }
                         }
                     }
@@ -173,33 +184,33 @@ namespace AutoAppdater.Interfaces
                     {
                         if (cand_enable)
                         {
-                            if (cand.Count > 0)
+                            if (obsVal.cand.Count > 0)
                             {
-                                historyLen = -1;
-                                history.Add(currentSentence);
-                                if (history.Count > hist_count)
+                                obsVal.historyLen = -1;
+                                obsVal.history.Add(obsVal.currentSentence);
+                                if (obsVal.history.Count > hist_count)
                                 {
-                                    history.RemoveAt(0);
+                                    obsVal.history.RemoveAt(0);
                                 }
-                                if (candLen < 0)
+                                if (obsVal.candLen < 0)
                                 {
-                                    candLen = 0;
-                                    candKeep = currentSentence;
-                                    currentSentence = cand[candLen];
-                                    currentPosition = currentSentence.Length;
+                                    obsVal.candLen = 0;
+                                    obsVal.candKeep = obsVal.currentSentence;
+                                    obsVal.currentSentence = obsVal.cand[obsVal.candLen];
+                                    obsVal.currentPosition = obsVal.currentSentence.Length;
                                 }
-                                else if (candLen + 1 < cand.Count)
+                                else if (obsVal.candLen + 1 < obsVal.cand.Count)
                                 {
-                                    candLen++;
-                                    currentSentence = cand[candLen];
-                                    currentPosition = currentSentence.Length;
+                                    obsVal.candLen++;
+                                    obsVal.currentSentence = obsVal.cand[obsVal.candLen];
+                                    obsVal.currentPosition = obsVal.currentSentence.Length;
                                 }
                                 else
                                 {
-                                    candLen = -1;
-                                    currentSentence = candKeep;
-                                    currentPosition = currentSentence.Length;
-                                    candKeep = "";
+                                    obsVal.candLen = -1;
+                                    obsVal.currentSentence = obsVal.candKeep;
+                                    obsVal.currentPosition = obsVal.currentSentence.Length;
+                                    obsVal.candKeep = "";
                                 }
                             }
                         }
@@ -207,16 +218,16 @@ namespace AutoAppdater.Interfaces
                     else
                     if (info.Key == backspace)
                     {
-                        if (currentPosition != 0)
+                        if (obsVal.currentPosition != 0)
                         {
-                            historyLen = -1;
-                            candLen = -1;
-                            currentSentence = currentSentence.Remove(currentPosition - 1, 1);
-                            currentPosition--;
+                            obsVal.historyLen = -1;
+                            obsVal.candLen = -1;
+                            obsVal.currentSentence = obsVal.currentSentence.Remove(obsVal.currentPosition - 1, 1);
+                            obsVal.currentPosition--;
                             //set candidacies
-                            if (currentSentence.Replace(split, "").Length != 0)
+                            if (obsVal.currentSentence.Replace(split, "").Length != 0)
                             {
-                                Candidacies[] c = CommandSet.GetCandidacies(currentSentence.Split(split));
+                                Candidacies[] c = CommandSet.GetCandidacies(obsVal.currentSentence.Split(split));
                                 if (c.Length > 0)
                                 {
                                     List<string> lis = [string.Join(split, c[0].mostMatchArgs)];
@@ -258,7 +269,7 @@ namespace AutoAppdater.Interfaces
                                             }
                                         }
                                     }
-                                    cand = lis;
+                                    obsVal.cand = lis;
                                 }
                             }
                         }
@@ -266,14 +277,14 @@ namespace AutoAppdater.Interfaces
                     else
                     if (info.Key == space)
                     {
-                        historyLen = -1;
-                        candLen = -1;
-                        currentSentence = currentSentence.Insert(currentPosition, info.KeyChar.ToString());
-                        currentPosition++;
+                        obsVal.historyLen = -1;
+                        obsVal.candLen = -1;
+                        obsVal.currentSentence = obsVal.currentSentence.Insert(obsVal.currentPosition, info.KeyChar.ToString());
+                        obsVal.currentPosition++;
                         //set candidacies
-                        if (currentSentence.Replace(split, "").Length != 0)
+                        if (obsVal.currentSentence.Replace(split, "").Length != 0)
                         {
-                            Candidacies[] c = CommandSet.GetCandidacies(currentSentence.Split(split));
+                            Candidacies[] c = CommandSet.GetCandidacies(obsVal.currentSentence.Split(split));
                             if (c.Length > 0)
                             {
                                 List<string> lis = [string.Join(split, c[0].mostMatchArgs)];
@@ -315,35 +326,35 @@ namespace AutoAppdater.Interfaces
                                         }
                                     }
                                 }
-                                cand = lis;
+                                obsVal.cand = lis;
                             }
                         }
                     }
                     else
                     if (info.Key == enter)
                     {
-                        historyLen = -1;
-                        candLen = -1;
-                        cand = [];
-                        candKeep = "";
-                        history.Add(currentSentence);
-                        if (history.Count > hist_count)
+                        obsVal.historyLen = -1;
+                        obsVal.candLen = -1;
+                        obsVal.cand = [];
+                        obsVal.candKeep = "";
+                        obsVal.history.Add(obsVal.currentSentence);
+                        if (obsVal.history.Count > hist_count)
                         {
-                            history.RemoveAt(0);
+                            obsVal.history.RemoveAt(0);
                         }
-                        currentSentence = "";
-                        Task t = Task.Run(() => Call(currentSentence.Split(split)));
+                        obsVal.currentSentence = "";
+                        Task t = Task.Run(() => Call(obsVal.currentSentence.Split(split)));
                     }
                     else
                     {
-                        historyLen = -1;
-                        candLen = -1;
-                        currentSentence = currentSentence.Insert(currentPosition, info.KeyChar.ToString());
-                        currentPosition++;
+                        obsVal.historyLen = -1;
+                        obsVal.candLen = -1;
+                        obsVal.currentSentence = obsVal.currentSentence.Insert(obsVal.currentPosition, info.KeyChar.ToString());
+                        obsVal.currentPosition++;
                         //set candidacies
-                        if (currentSentence.Replace(split, "").Length != 0)
+                        if (obsVal.currentSentence.Replace(split, "").Length != 0)
                         {
-                            Candidacies[] c = CommandSet.GetCandidacies(currentSentence.Split(split));
+                            Candidacies[] c = CommandSet.GetCandidacies(obsVal.currentSentence.Split(split));
                             if (c.Length > 0)
                             {
                                 List<string> lis = [string.Join(split, c[0].mostMatchArgs)];
@@ -385,7 +396,7 @@ namespace AutoAppdater.Interfaces
                                         }
                                     }
                                 }
-                                cand = lis;
+                                obsVal.cand = lis;
                             }
                         }
                     }

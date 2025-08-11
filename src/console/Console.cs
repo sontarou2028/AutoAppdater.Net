@@ -49,14 +49,12 @@ namespace AutoAppdater.Consoles
     public class Console
     {
         public int Priority { get; }
+        public int ColumnCount { get; } = 0;
+        public int AllColumnCount { get; } = 0;
         List<ColumnInfo> infos;
         internal Console()
         {
 
-        }
-        public void Add(string addValue)
-        {
-            
         }
         public void Insert(int index,string len,string insertValue)
         {
@@ -98,6 +96,10 @@ namespace AutoAppdater.Consoles
         {
             
         }
+        public void Add(string text)
+        {
+            
+        }
         public void Add(string text, ConsoleColor textColor, ConsoleColor sceneColor)
         {
 
@@ -108,7 +110,7 @@ namespace AutoAppdater.Consoles
         }
         public void HideAt(int index)
         {
-            
+
         }
         public void HideAll()
         {
