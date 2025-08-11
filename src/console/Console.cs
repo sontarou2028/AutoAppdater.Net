@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace AutoAppdater.Console
+namespace AutoAppdater.Consoles
 {
     enum ChangeType
     {

@@ -1,9 +1,8 @@
-using System;
 using AutoAppdater.Command;
-using AutoAppdater.Console;
+using AutoAppdater.Consoles;
 using AutoAppdater.Property;
 
-namespace AutoAppdater.Interface
+namespace AutoAppdater.Interfaces
 {
     public static class Interface
     {
@@ -27,9 +26,9 @@ namespace AutoAppdater.Interface
         static List<int> observingRegion = [];
         static Log.Log log = Common.Common.DefaultLogHost;
         static PropertyGroup config = new PropertyGroup();
-        static Console.Console observerHost;
-        static Console.Console passwordHost;
-        static CancellationTokenSource observerCts;
+        static Consoles.Console observerHost = new Consoles.Console();
+        static Consoles.Console passwordHost = new Consoles.Console();
+        static CancellationTokenSource observerCts = new CancellationTokenSource();
         static bool observerPausing = false;
         static object obl = new object();
         static object stateLocker = new object();

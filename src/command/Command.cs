@@ -1,4 +1,4 @@
-using AutoAppdater.Interface;
+using AutoAppdater.Interfaces;
 using AutoAppdater.Common;
 
 namespace AutoAppdater.Command

@@ -10,13 +10,35 @@ namespace AutoAppdater.MainSenderHost
         public const int Log = 1;
         public const int Console = 2;
     }
+    internal struct LibraryAuthor
+    {
+        public const string Name = "AutoAppdater.Net";
+        public const string Version = "1.0.0";
+        public const string Framework = "net9.0";
+    }
     public struct Author
     {
-        
+        public string Name;
+        public string Version;
+    }
+    public enum TargetVersionOption : byte
+    {
+        Upper,
+        Lower,
+        Match,
+    }
+    public struct TargetAuthor
+    {
+        public string TargetName;
+        public string TargetVersion;
+        public TargetVersionOption Option;
+        public string? UUID;
     }
     public class CopyData
     {
-        public Author LibraryAuthor{ get; }
+        public Author LibraryAuthor { get; }
+        public Author? ModAuthor { get; }
+        public TargetAuthor? TargetAuthor { get; }
         public int SenderId { get; }
         public int? Int { get; }
         public long? Long { get; }
@@ -24,8 +46,10 @@ namespace AutoAppdater.MainSenderHost
         public double? Double { get; }
         public char? Char { get; }
         public string? Str { get; }
-        public CopyData(int SenderId, int? Int, long? Long, float? Float, double? Double, char? Char, string? Str)
+        public CopyData(Author? ModAuthor, TargetAuthor? TargetAuthor, int SenderId, int? Int, long? Long, float? Float, double? Double, char? Char, string? Str)
         {
+            this.ModAuthor = ModAuthor;
+            this.TargetAuthor = TargetAuthor;
             this.SenderId = SenderId;
             this.Int = Int;
             this.Long = Long;
@@ -37,8 +61,8 @@ namespace AutoAppdater.MainSenderHost
     }
     public class CourierData : CopyData
     {
-        public CourierData(int SenderId, int? Int, long? Long, float? Float, double? Double, char? Char, string? Str)
-        : base(SenderId, Int, Long, Float, Double, Char, Str)
+        public CourierData(Author? ModAuthor, TargetAuthor? TargetAuthor, int SenderId, int? Int, long? Long, float? Float, double? Double, char? Char, string? Str)
+        : base(ModAuthor,TargetAuthor,SenderId, Int, Long, Float, Double, Char, Str)
         {
             //senderId check
             if (SenderId == SystemId.System) throw new InvalidOperationException("Cannot use a system reserved ID.");
