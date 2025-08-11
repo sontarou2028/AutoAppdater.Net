@@ -29,6 +29,11 @@ namespace AutoAppdater.Log
             if (language != null) return language.Convert(message);
             else return null;
         }
+        string? LanguageConverter(string message,params string[] args)
+        {
+            if (language != null) return language.Convert(message,args);
+            else return null;
+        }
         string TimeInsert(string message)
         {
             DateTime dt = DateTime.Now;
@@ -37,6 +42,50 @@ namespace AutoAppdater.Log
         void Logging(string message)
         {
             
+        }
+        public void Info(string message, bool translate, params string[] args)
+        {
+            if (translate)
+            {
+                string? lang = LanguageConverter(message,args);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[info]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Error(string message, bool translate, params string[] args)
+        {
+            if (translate)
+            {
+                string? lang = LanguageConverter(message,args);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[error]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Guide(string message, bool translate, params string[] args)
+        {
+            if (translate)
+            {
+                string? lang = LanguageConverter(message,args);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[guide]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Warning(string message, bool translate, params string[] args)
+        {
+            if (translate)
+            {
+                string? lang = LanguageConverter(message,args);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[warn]");
+            message = TimeInsert(message);
+            Logging(message);
         }
         public void Info(string message, bool translate)
         {
@@ -76,6 +125,50 @@ namespace AutoAppdater.Log
             if (translate)
             {
                 string? lang = LanguageConverter(message);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[warn]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Info(string message, params string[] args)
+        {
+            if (AlwaysTranslate)
+            {
+                string? lang = LanguageConverter(message,args);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[info]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Error(string message, params string[] args)
+        {
+            if (AlwaysTranslate)
+            {
+                string? lang = LanguageConverter(message,args);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[error]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Guide(string message, params string[] args)
+        {
+            if (AlwaysTranslate)
+            {
+                string? lang = LanguageConverter(message,args);
+                if (lang != null) message = lang;
+            }
+            message = message.Insert(0, "[guide]");
+            message = TimeInsert(message);
+            Logging(message);
+        }
+        public void Warning(string message, params string[] args)
+        {
+            if (AlwaysTranslate)
+            {
+                string? lang = LanguageConverter(message,args);
                 if (lang != null) message = lang;
             }
             message = message.Insert(0, "[warn]");

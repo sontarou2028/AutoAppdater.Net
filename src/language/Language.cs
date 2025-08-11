@@ -13,6 +13,72 @@ namespace AutoAppdater.Language
             group.Sort(SortType.Attribute_ASC);
         }
         object combinerLocker = new object();
+        public string? Convert(string text, params string[] args)
+        {
+            const string formattable = "{$}";
+            lock (combinerLocker)
+            {
+                text = text.Insert(0,formattable);
+                if (Attributed == null)
+                {
+                    Property.Property? prop = group.GetPropertyByName(text);
+                    if (prop != null)
+                    {
+                        Task t = Task.Run(() => SetCurrentAttribute(prop.Attribute));
+                        if (prop.Value.StrValue == null) return null;
+                        try
+                        {
+                            return string.Format(prop.Value.StrValue, args);
+                        }
+                        catch
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    Property.Property? prop = Attributed.GetPropertyByName(text);
+                    if (prop != null)
+                    {
+                        if (prop.Value.StrValue == null) return null;
+                        try
+                        {
+                            return string.Format(prop.Value.StrValue, args);
+                        }
+                        catch
+                        {
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        prop = group.GetPropertyByName(text);
+                        if (prop != null)
+                        {
+                            Task t = Task.Run(() => SetCurrentAttribute(prop.Attribute));
+                            if (prop.Value.StrValue == null) return null;
+                            try
+                            {
+                                return string.Format(prop.Value.StrValue, args);
+                            }
+                            catch
+                            {
+                                return null;
+                            }
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
         public string? Convert(string text)
         {
             lock (combinerLocker)

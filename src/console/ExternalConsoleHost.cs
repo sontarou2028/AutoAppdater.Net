@@ -1,6 +1,5 @@
 
 using System.IO.MemoryMappedFiles;
-using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Text.Json;
 using AutoAppdater.Consoles;
