@@ -1,5 +1,6 @@
 using AutoAppdater.Interfaces;
 using AutoAppdater.Common;
+using AutoAppdater.MainSenderHost;
 
 namespace AutoAppdater.Command
 {
@@ -1718,11 +1719,152 @@ namespace AutoAppdater.Command
             }
             log.Info(outline);
         }
-        internal static CommandResponse? CallCommandComponent(CommandComponent component, IReadOnlyCommandComponent readOnlyCommandComponent)
+        public static int ArroundCallCommandComponent(string[] args)
         {
-            return component.Handler.Call(readOnlyCommandComponent);
+            return MainSender.Send(new CopyData(null, null, SystemId.Command, null, null, null, null, null, null, args));
         }
-        public static CommandResponse? CallCommandComponent(string[] args)
+        public static int ArroundCallCommandComponent(string[] args,CallOption option)
+        {
+            return MainSender.Send(new CopyData(null, null, SystemId.Command, (int)option, null, null, null, null, null, args));
+        }
+        public static (int code, CommandResponse? response) GlobalCallCommandComponent(string[] args)
+        {
+            foreach (CommandComponent component in components)
+            {
+                if (args[0] != component.Name) continue;
+                int level = 0;
+                List<int> taskc = new List<int> { 0 };
+                CommandComponent icom = component;
+                List<CommandComponent> itarget = new List<CommandComponent> { icom };
+                IReadOnlyCommandComponent com = new IReadOnlyCommandComponent(component.Name, component.Type, args[0] == null ? null : args[0]);
+                List<IReadOnlyCommandComponent> target = [com];
+                while (true)
+                {
+                    if (itarget[level].Components.Length > taskc[level])
+                    {
+                        //List<CommandComponent> lis = target[level].Components.ToList();
+                        //ICommandComponent c = itarget[level].Components[taskc[level]];
+                        //CommandComponent cc = new CommandComponent(c.Name, c.Expression, getNewId, c.Type);
+                        //cc.Handler.SwapEventHandler(c.Handler.getEventHandler());
+                        //lis.Add(cc);
+                        //target[level].Components = lis.ToArray();
+                        if (args.Length < level + 1)
+                        {
+                            if (args[level + 1] == itarget[level].Components[taskc[level]].Name)
+                            {
+                                if (args.Length == level + 2)
+                                {
+                                    if (itarget[level].Components[taskc[level]].Components.Length == 0)
+                                    {
+                                        return (MainSender.Send(new CopyData(null, null, SystemId.Command, null, null, null, null, null, null, args)),
+                                        itarget[level].Components[taskc[level]].Handler.Call(com));
+                                    }
+                                }
+                                taskc.Add(0);
+                                itarget.Add(itarget[level].Components[taskc[level]]);
+                                List<IReadOnlyCommandComponent> c = target[level].Components.ToList();
+                                c.Add(new IReadOnlyCommandComponent(itarget[level + 1].Name, itarget[level + 1].Type, itarget[level + 1].Value));
+                                target.Add(target[level].Components[taskc[level]]);
+                                level++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (level == 0) break;
+                        else
+                        {
+                            taskc.RemoveAt(level);
+                            target.RemoveAt(level);
+                            itarget.RemoveAt(level);
+                            level--;
+                            taskc[level]++;
+                        }
+                    }
+                }
+            }
+            return (MainSender.Send(new CopyData(null, null, SystemId.Command, null, null, null, null, null, null, args)), null);
+        }
+        public static (int code,CommandResponse? response) GlobalCallCommandComponent(string[] args, CallOption option)
+        {
+            foreach (CommandComponent component in components)
+            {
+                if (args[0] != component.Name) continue;
+                int level = 0;
+                List<int> taskc = [0];
+                CommandComponent icom = component;
+                List<CommandComponent> itarget = [icom];
+                IReadOnlyCommandComponent com = new IReadOnlyCommandComponent(component.Name, component.Type, args[0] == null ? null : args[0]);
+                List<IReadOnlyCommandComponent> target = [com];
+                while (true)
+                {
+                    if (itarget[level].Components.Length > taskc[level])
+                    {
+                        //List<CommandComponent> lis = target[level].Components.ToList();
+                        //ICommandComponent c = itarget[level].Components[taskc[level]];
+                        //CommandComponent cc = new CommandComponent(c.Name, c.Expression, getNewId, c.Type);
+                        //cc.Handler.SwapEventHandler(c.Handler.getEventHandler());
+                        //lis.Add(cc);
+                        //target[level].Components = lis.ToArray();
+                        if (args.Length < level + 1)
+                        {
+                            if (args[level + 1] == itarget[level].Components[taskc[level]].Name)
+                            {
+                                if (args.Length == level + 2)
+                                {
+                                    if (option == CallOption.Perfect && itarget[level].Components[taskc[level]].Components.Length == 0)
+                                    {
+                                        return (MainSender.Send(new CopyData(null,null,SystemId.Command,null,null,null,null,null,null,args)),
+                                        itarget[level].Components[taskc[level]].Handler.Call(com));
+                                    }
+                                    else if (option == CallOption.PerfectStep)
+                                    {
+                                        return (MainSender.Send(new CopyData(null,null,SystemId.Command,null,null,null,null,null,null,args)),
+                                        itarget[level].Components[taskc[level]].Handler.Call(com));
+                                    }
+                                }
+                                taskc.Add(0);
+                                itarget.Add(itarget[level].Components[taskc[level]]);
+                                List<IReadOnlyCommandComponent> c = target[level].Components.ToList();
+                                c.Add(new IReadOnlyCommandComponent(itarget[level + 1].Name, itarget[level + 1].Type, itarget[level + 1].Value));
+                                target.Add(target[level].Components[taskc[level]]);
+                                level++;
+                            }
+                            else if (args[level + 1].Length < itarget[level].Components[taskc[level]].Name.Length
+                                        && args[level + 1] == itarget[level].Components[taskc[level]].Name.Substring(0, args[level + 1].Length))
+                            {
+                                if (args.Length == level + 2)
+                                {
+                                    if (option == CallOption.MatchStep && option == CallOption.MatchTop)
+                                    {
+                                        return (MainSender.Send(new CopyData(null,null,SystemId.Command,null,null,null,null,null,null,args)),
+                                        itarget[level].Components[taskc[level]].Handler.Call(com));
+                                    }
+                                    else
+                                    {
+                                        return (MainSender.Send(new CopyData(null,null,SystemId.Command,null,null,null,null,null,null,args)),null);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (level == 0) break;
+                        else
+                        {
+                            taskc.RemoveAt(level);
+                            target.RemoveAt(level);
+                            itarget.RemoveAt(level);
+                            level--;
+                            taskc[level]++;
+                        }
+                    }
+                }
+            }
+            return (MainSender.Send(new CopyData(null,null,SystemId.Command,null,null,null,null,null,null,args)),null);
+        }
+        public static CommandResponse? LocalCallCommandComponent(string[] args)
         {
             foreach (CommandComponent component in components)
             {
@@ -1779,7 +1921,7 @@ namespace AutoAppdater.Command
             }
             return null;
         }
-        public static CommandResponse? CallCommandComponent(string[] args, CallOption option)
+        public static CommandResponse? LocalCallCommandComponent(string[] args, CallOption option)
         {
             foreach (CommandComponent component in components)
             {

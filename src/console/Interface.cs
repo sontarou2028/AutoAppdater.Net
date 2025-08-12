@@ -5,7 +5,7 @@ using AutoAppdater.Property;
 
 namespace AutoAppdater.Interfaces
 {
-    public static class Interface
+    public class Interface
     {
         struct ConfigValue
         {
@@ -19,28 +19,34 @@ namespace AutoAppdater.Interfaces
         {
             public const string err_com_not_found = "Unknown command input.Type 'help' to list keywords.";
         }
-        public static bool Observing { get { return observing; } }
-        public static bool PasswordObserving { get { return PasswordObserving;} }
-        static bool pswObserving = false;
-        static bool observing = false;
-        public static int[] ObservingRegion { get { return observingRegion.ToArray(); } }
-        static List<int> observingRegion = [];
-        static Log.Log log = Common.Common.DefaultLogHost;
-        static PropertyGroup config = new PropertyGroup();
-        static Consoles.Console observerHost = new Consoles.Console();
-        static Consoles.Console candHost = new Consoles.Console();
-        static Consoles.Console passwordHost = new Consoles.Console();
-        static CancellationTokenSource observerCts = new CancellationTokenSource();
-        static bool observerPausing = false;
-        static object obl = new object();
-        static object stateLocker = new object();
-        static ObserverValue obsVal = new ObserverValue();
-        static void Call(string[] args)
+        public bool Observing { get { return observing; } }
+        public bool PasswordObserving { get { return PasswordObserving;} }
+        bool pswObserving = false;
+        bool observing = false;
+        public int[] ObservingRegion { get { return observingRegion.ToArray(); } }
+        List<int> observingRegion = [];
+        readonly Log.Log log = Common.Common.DefaultLogHost;
+        readonly PropertyGroup config = new PropertyGroup();
+        readonly Consoles.Console observerHost;
+        readonly Consoles.Console candHost;
+        readonly Consoles.Console passwordHost;
+        readonly CancellationTokenSource observerCts = new CancellationTokenSource();
+        readonly bool observerPausing = false;
+        readonly object obl = new object();
+        readonly object stateLocker = new object();
+        ObserverValue obsVal = new ObserverValue();
+        public Interface(Consoles.Console observerHost, Consoles.Console candHost, Consoles.Console passwordHost)
         {
-            CommandResponse? c = CommandSet.CallCommandComponent(args);
+            this.observerHost = observerHost;
+            this.candHost = candHost;
+            this.passwordHost = passwordHost;
+        }
+        void Call(string[] args)
+        {
+            CommandResponse? c = CommandSet.LocalCallCommandComponent(args);
             log.Error(DefaultValue.err_com_not_found);
         }
-        public static void BeginObserve(int displayChannel)
+        public  void BeginObserve(int displayChannel)
         {
             lock (stateLocker)
             {
@@ -51,7 +57,7 @@ namespace AutoAppdater.Interfaces
                 Task t = Task.Run(() => Observer(), observerCts.Token);
             }
         }
-        public static void StopObserve()
+        public  void StopObserve()
         {
             lock (stateLocker)
             {
@@ -63,7 +69,7 @@ namespace AutoAppdater.Interfaces
                 obsVal = new ObserverValue();
             }
         }
-        static void ResumeObserver()
+        void ResumeObserver()
         {
             lock (stateLocker)
             {
@@ -73,7 +79,7 @@ namespace AutoAppdater.Interfaces
                 Task t = Task.Run(() => Observer(), observerCts.Token);
             }
         }
-        static void PauseObserve()
+        void PauseObserve()
         {
             lock (stateLocker)
             {
@@ -93,7 +99,7 @@ namespace AutoAppdater.Interfaces
             internal string candKeep = "";
             internal int candLen = -1;
         }
-        static void Observer()
+        void Observer()
         {
             lock (obl)
             {
@@ -403,7 +409,7 @@ namespace AutoAppdater.Interfaces
                 }
             }
         }
-        static string? PasswordInterruptor()
+        string? PasswordInterruptor()
         {
             Property.Property? p;
             const ConsoleKey backspace = ConsoleKey.Backspace;
@@ -465,7 +471,7 @@ namespace AutoAppdater.Interfaces
                 return currentSentence;
             }
         }
-        public static string? PasswordInputRequest()
+        public  string? PasswordInputRequest()
         {
             lock (stateLocker)
             {

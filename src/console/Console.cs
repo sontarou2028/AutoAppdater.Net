@@ -1,18 +1,19 @@
-using System.Text.Json.Serialization;
+using System.IO.Pipelines;
+using AutoAppdater.ConsoleHosts;
 
 namespace AutoAppdater.Consoles
 {
-    enum ChangeType
+    enum ChangeType : byte
     {
         Add,
         Remove,
-        Change,
+        Replace,
     }
     internal class DisplayInfo
     {
         public int Priority;
         public string[] Sentences;
-        public string[] PastSentence;
+        //public string[] PastSentence;
         public int[] Column;
         public ConsoleColor[][] TextColor;
         public ConsoleColor[][] SceneColor;
@@ -20,41 +21,66 @@ namespace AutoAppdater.Consoles
         public ConsoleColor?[][] DefaultSceneFillColorPattern;
         public (int start, int end)[][] ChangeLen;
         public ChangeType[] ChangeTypes;
+        public DisplayInfo(int Priority, string[] Sentences, /*string[] PastSentence, */int[] Column,
+        ConsoleColor[][] TextColor, ConsoleColor[][] SceneColor,
+        ConsoleColor?[][] DefaultTextFillColorPattern, ConsoleColor?[][] DefaultSceneFillColorPattern,
+        (int start, int end)[][] ChangeLen, ChangeType[] ChangeTypes)
+        {
+            this.Priority = Priority;
+            this.Sentences = Sentences;
+            //this.PastSentence = PastSentence;
+            this.Column = Column;
+            this.TextColor = TextColor;
+            this.SceneColor = SceneColor;
+            this.DefaultTextFillColorPattern = DefaultTextFillColorPattern;
+            this.DefaultSceneFillColorPattern = DefaultSceneFillColorPattern;
+            this.ChangeLen = ChangeLen;
+            this.ChangeTypes = ChangeTypes;
+        }
+    }
+    class TeropColumnInfo
+    {
+        public string? InitTerop;
+        public string? EndTerop;
+        public (int[] value, Func<int, bool>)? InitTeropSetConditions;
+        public (int[] value, Func<int, bool>)? EndTeropSetConditions;
+        public ConsoleColor[]? InitTeropTextColor;
+        public ConsoleColor[]? EndTeropTextColor;
+        public ConsoleColor[]? InitTeropSceneColor;
+        public ConsoleColor[]? EndTeropSceneColor;
+    }
+    class TitleColumnInfo
+    {
+        public string? InitTitle;
+        public string? EndTitle;
+        public (int[] value, Func<int, bool>)? InitTitleSetConditions;
+        public (int[] value, Func<int, bool>)? EndTitleSetConditions;
+        public ConsoleColor[]? InitTitleTextColor;
+        public ConsoleColor[]? EndTitleTextColor;
+        public ConsoleColor[]? InitTitleSceneColor;
+        public ConsoleColor[]? EndTitleSceneColor;
     }
     class ColumnInfo
     {
-        public string? InitTerop;
-        public string? InitTitle;
         public string? Text;
-        public string? EndTitle;
-        public string? EndTerop;
-        public (int[] value, Func<int,bool>)? InitTeropSetConditions;
-        public (int[] value, Func<int,bool>)? InitTitleSetConditions;
-        public (int[] value, Func<int,bool>)? TextSetConditions;
-        public (int[] value, Func<int,bool>)? EndTitleSetConditions;
-        public (int[] value, Func<int,bool>)? EndTeropSetConditions;
-        public ConsoleColor[]? InitTeropTextColor;
-        public ConsoleColor[]? InitTitleTextColor;
+        public (int[] value, Func<int, bool>)? TextSetConditions;
         public ConsoleColor[]? TextColor;
-        public ConsoleColor[]? EndTitleTextColor;
-        public ConsoleColor[]? EndTeropTextColor;
-        public ConsoleColor[]? InitTeropSceneColor;
-        public ConsoleColor[]? InitTitleSceneColor;
         public ConsoleColor[]? TextSceneColor;
-        public ConsoleColor[]? EndTitleSceneColor;
-        public ConsoleColor[]? EndTeropSceneColor;
-        public ConsoleColor[]? DefaultTextFillColorPattern;
-        public ConsoleColor[]? DefaultSceneFillColorPattern;
     }
     public class Console
     {
-        public int Priority { get; }
+        public int Priority { get { return priority; } }
+        int priority;
         public int ColumnCount { get; } = 0;
         public int AllColumnCount { get; } = 0;
-        List<ColumnInfo> infos;
-        internal Console()
+        List<TeropColumnInfo> terops = [];
+        List<TitleColumnInfo> titles = [];
+        List<ColumnInfo> infos = [];
+        ConsoleHost host;
+        internal Console(ConsoleHost host,int priority)
         {
-
+            this.priority = priority;
+            this.host = host;
         }
         public void Insert(int index,string len,string insertValue)
         {
@@ -124,28 +150,20 @@ namespace AutoAppdater.Consoles
         {
             
         }
-        void Display()
-        {
-            
-        }
-    }
-    static class Display
-    {
-        static void ChangeOffset(int TopLen)
+        void ChangeOffset(int TopLen)
         {
 
         }
-        static void Write(DisplayInfo info)
+        int Write(DisplayInfo info)
         {
-
+            return host.SendInfo(info);
         }
-        static void Clear(int priority)
+        int Clear()
         {
-            
-        }
-        static void ClearAll()
-        {
-
+            ChangeType[] t = new ChangeType[AllColumnCount];
+            Array.Fill(t, ChangeType.Remove);
+            DisplayInfo inf = new DisplayInfo(Priority, [], [], [], [], [], [], [], t);
+            return host.SendInfo(inf);
         }
     }
 }

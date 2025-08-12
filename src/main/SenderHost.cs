@@ -9,6 +9,7 @@ namespace AutoAppdater.MainSenderHost
         public const int System = 0;
         public const int Log = 1;
         public const int Console = 2;
+        public const int Command = 3;
     }
     internal struct LibraryAuthor
     {
@@ -69,9 +70,8 @@ namespace AutoAppdater.MainSenderHost
         : base(ModAuthor,TargetAuthor,SenderId, Int, Long, Float, Double, Char, Str, ObjArr)
         {
             //senderId check
-            if (SenderId == SystemId.System) throw new InvalidOperationException("Cannot use a system reserved ID.");
-            if (SenderId == SystemId.Log) throw new InvalidOperationException("Cannot use a system reserved ID.");
-            if (SenderId == SystemId.Console) throw new InvalidOperationException("Cannot use a system reserved ID.");
+            if (SenderId == SystemId.System || SenderId == SystemId.Log ||
+            SenderId == SystemId.Console || SenderId == SystemId.Command) throw new InvalidOperationException("Cannot use a system reserved ID.");
         }
     }
     [StructLayout(LayoutKind.Sequential)]
