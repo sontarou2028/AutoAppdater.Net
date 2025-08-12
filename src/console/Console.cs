@@ -114,14 +114,14 @@ namespace AutoAppdater.Consoles
         {
             
         }
-        public (string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)? GetIndex(int index)
-        {
+        //public (string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)? GetIndex(int index)
+        //{
 
-        }
-        public (string text,ConsoleColor[] textColor,ConsoleColor[] sceneColor)[] GetAll()
-        {
+        //}
+        //public (string text,ConsoleColor[] textColor,ConsoleColor[] sceneColor)[] GetAll()
+        //{
             
-        }
+        //}
         public void Add(string text)
         {
             
