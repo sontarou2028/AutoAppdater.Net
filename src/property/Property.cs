@@ -2,9 +2,9 @@ using System.Xml;
 
 namespace AutoAppdater.Property
 {
-    public static class PropertyBuilder
+    public static class PropertySelializer
     {
-        public static PropertyGroup? PropertyBuild(string inline)
+        public static PropertyGroup? PropertyDeselializer(string inline)
         {
             List<Property> properties = [];
             List<ReadOnlyProperty> readOnlies = [];
@@ -19,11 +19,7 @@ namespace AutoAppdater.Property
             string[] attribute_end = { "]" };
             string[] refact_ignore = { "#" };
             string[] refact_readonly = { "**" };
-            string unreversed = inline;
-            foreach (string s in reverse)
-            {
-                unreversed = unreversed.Replace(s, reverse[0]);
-            }
+            string[] esc_return = { @"\\n" };
             string[] line = inline.Split(reverse[0].ToCharArray());
             string currendAttribute = nothing;
             foreach (string s in line)
@@ -124,21 +120,35 @@ namespace AutoAppdater.Property
                         else
                         {
                             unspaced = s.Substring(startLen + icholeLen);
+                            foreach (string sr in esc_return)
+                            {
+                                unspaced = unspaced.Replace(sr, reverse[0]);
+                            }
                             val.StrValue = unspaced;
                         }
                     }
-                    if (readOnly) readOnlies.Add(new ReadOnlyProperty(s.Substring(0, startLen), currendAttribute, val));
-                    else properties.Add(new Property(s.Substring(0, startLen), currendAttribute, val));
+                    string name = s.Substring(0, startLen);
+                    foreach (string sr in esc_return)
+                    {
+                        name = name.Replace(sr, reverse[0]);
+                    }
+                    if (readOnly) readOnlies.Add(new ReadOnlyProperty(name, currendAttribute, val));
+                    else properties.Add(new Property(name, currendAttribute, val));
                 }
                 else
                 {
-                    if(readOnly) readOnlies.Add(new ReadOnlyProperty(s, currendAttribute, new Value()));
-                    else properties.Add(new Property(s, currendAttribute, new Value()));
+                    string name = s;
+                    foreach (string sr in esc_return)
+                    {
+                        name = name.Replace(sr, reverse[0]);
+                    }
+                    if(readOnly) readOnlies.Add(new ReadOnlyProperty(name, currendAttribute, new Value()));
+                    else properties.Add(new Property(name, currendAttribute, new Value()));
                 }
             }
             return new PropertyGroup(properties.ToArray(),readOnlies.ToArray());
         }
-        public static string PropertySum(PropertyGroup propertyGroup)
+        public static string PropertySerializer(PropertyGroup propertyGroup)
         {
             PropertyGroup group = propertyGroup.ToPropertyGroup();
             group.Sort(SortType.Attribute_ASC);
@@ -148,6 +158,7 @@ namespace AutoAppdater.Property
             string att_end = "]";
             string chr_return = "\n";
             string chr_readonly = "**";
+            string esc_return = @"\\n";
             string nullstr = nothing;
             string currentAttribute = nothing;
             string config = nothing;
@@ -158,23 +169,23 @@ namespace AutoAppdater.Property
                 flag = true;
                 if (p.Attribute == currentAttribute)
                 {
-                    config += p.Name + ichole +
-                    (p.Value.StrValue == null ? nullstr : p.Value.StrValue) +
+                    config += p.Name.Replace(chr_return,esc_return) + ichole +
+                    (p.Value.StrValue == null ? nullstr : p.Value.StrValue.Replace(chr_return,esc_return)) +
                     (p.Value.IntValue == null ? nullstr : p.Value.IntValue) +
                     (p.Value.BoolValue == null ? nullstr : p.Value.BoolValue) + chr_return;
                 }
                 else
                 {
                     config += att_start + p.Attribute + att_end + chr_return +
-                    p.Name + ichole +
-                    (p.Value.StrValue == null ? nullstr : p.Value.StrValue) +
+                    p.Name.Replace(chr_return,esc_return) + ichole +
+                    (p.Value.StrValue == null ? nullstr : p.Value.StrValue.Replace(chr_return,esc_return)) +
                     (p.Value.IntValue == null ? nullstr : p.Value.IntValue) +
                     (p.Value.BoolValue == null ? nullstr : p.Value.BoolValue) + chr_return;
                     attributes.Add(currentAttribute);
                     foreach (ReadOnlyProperty irp in group.GetAllReadOnlyPropertyByAttribute(currentAttribute))
                     {
-                        config += chr_readonly + irp.Name + ichole +
-                        (irp.Value.StrValue == null ? nullstr : irp.Value.StrValue) +
+                        config += chr_readonly.Replace(chr_return,esc_return) + irp.Name + ichole +
+                        (irp.Value.StrValue == null ? nullstr : irp.Value.StrValue.Replace(chr_return,esc_return)) +
                         (irp.Value.IntValue == null ? nullstr : irp.Value.IntValue) +
                         (irp.Value.BoolValue == null ? nullstr : irp.Value.BoolValue) + chr_return;
                     }
@@ -188,9 +199,10 @@ namespace AutoAppdater.Property
             ReadOnlyProperty[] readOnlies = group.ReadOnlyProperties;
             for (int i = 0; i < readOnlies.Length; i++)
             {
-                if (attributes.Contains(readOnlies[i].Attribute))
+                ReadOnlyProperty rp = readOnlies[i];
+                if (attributes.Contains(rp.Attribute))
                 {
-                    string att = readOnlies[i].Attribute;
+                    string att = rp.Attribute;
                     for (int j = i + 1; j < readOnlies.Length; j++)
                     {
                         if (readOnlies[j].Attribute != att)
@@ -202,21 +214,21 @@ namespace AutoAppdater.Property
                 }
                 else
                 {
-                    config += att_start + readOnlies[i].Attribute + att_end + chr_return;
-                    string att = readOnlies[i].Attribute;
+                    config += att_start + rp.Attribute + att_end + chr_return;
+                    string att = rp.Attribute;
                     for (int j = i; j < readOnlies.Length; j++)
                     {
-                        if (readOnlies[j].Attribute != att)
+                        if (rp.Attribute != att)
                         {
                             i = j;
                             break;
                         }
                         else
                         {
-                            config += chr_readonly + readOnlies[i].Name + ichole +
-                            (readOnlies[i].Value.StrValue == null ? nullstr : readOnlies[i].Value.StrValue) +
-                            (readOnlies[i].Value.IntValue == null ? nullstr : readOnlies[i].Value.IntValue) +
-                            (readOnlies[i].Value.BoolValue == null ? nullstr : readOnlies[i].Value.BoolValue) + chr_return;
+                            config += chr_readonly + rp.Name.Replace(chr_return,esc_return) + ichole +
+                            (rp.Value.StrValue == null ? nullstr : rp.Value.StrValue.Replace(chr_return,esc_return)) +
+                            (rp.Value.IntValue == null ? nullstr : rp.Value.IntValue) +
+                            (rp.Value.BoolValue == null ? nullstr : rp.Value.BoolValue) + chr_return;
                         }
                     }
                 }
