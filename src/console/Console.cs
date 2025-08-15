@@ -77,76 +77,96 @@ namespace AutoAppdater.Consoles
         List<TitleColumnInfo> titles = [];
         List<ColumnInfo> infos = [];
         ConsoleHost host;
-        internal Console(ConsoleHost host,int priority)
+        public TextMethots Text { get{ return text; } }
+        TextMethots text;
+        public TeropMethots Terop { get{ return terop; } }
+        TeropMethots terop;
+        public TitleMethots Title { get{ return title; } }
+        TitleMethots title;
+        internal Console(ConsoleHost host, int priority)
         {
             this.priority = priority;
             this.host = host;
+            text = new TextMethots();
+            terop = new TeropMethots();
+            title = new TitleMethots();
         }
-        public void Insert(int index,string len,string insertValue)
+        public class TextMethots
         {
-            
-        }
-        public void InsertAt(int Index, string insertValue)
-        {
-            
-        }
-        public void Remove(int index, int startLen, int count)
-        {
+            public void Insert(int index, string len, string insertValue)
+            {
 
-        }
-        public void RemoveAt(int index)
-        {
+            }
+            public void InsertAt(int Index, string insertValue)
+            {
+                
+            }
+            public void Remove(int index, int startLen, int count)
+            {
 
-        }
-        public void RemoveAll()
-        {
-            
-        }
-        public void Replace(int index, int startLen, int count, string newValue)
-        {
-            
-        }
-        public void Replace(int index, string oldValue, string newValue)
-        {
+            }
+            public void RemoveAt(int index)
+            {
 
-        }
-        public void ReplaceAt(int index, string newValue)
-        {
-            
-        }
-        //public (string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)? GetIndex(int index)
-        //{
+            }
+            public void RemoveAll()
+            {
+                
+            }
+            public void Replace(int index, int startLen, int count, string newValue)
+            {
+                
+            }
+            public void Replace(int index, string oldValue, string newValue)
+            {
 
-        //}
-        //public (string text,ConsoleColor[] textColor,ConsoleColor[] sceneColor)[] GetAll()
-        //{
-            
-        //}
-        public void Add(string text)
-        {
-            
-        }
-        public void Add(string text, ConsoleColor textColor, ConsoleColor sceneColor)
-        {
+            }
+            public void ReplaceAt(int index, string newValue)
+            {
+                
+            }
+            //public (string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)? GetIndex(int index)
+            //{
 
+            //}
+            //public (string text,ConsoleColor[] textColor,ConsoleColor[] sceneColor)[] GetAll()
+            //{
+                
+            //}
+            public void Add(string text)
+            {
+                
+            }
+            public void Add(string text, ConsoleColor textColor, ConsoleColor sceneColor)
+            {
+
+            }
+            public void Add(string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+            {
+                
+            }
+            public void HideAt(int index)
+            {
+
+            }
+            public void HideAll()
+            {
+
+            }
+            public void ShowAt(int index)
+            {
+                
+            }
+            public void ShowAll()
+            {
+                
+            }
         }
-        public void Add(string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+        public class TeropMethots
         {
             
         }
-        public void HideAt(int index)
-        {
-
-        }
-        public void HideAll()
-        {
-
-        }
-        public void ShowAt(int index)
-        {
-            
-        }
-        public void ShowAll()
+        public class TitleMethots
         {
             
         }
