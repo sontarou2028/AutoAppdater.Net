@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-9.0-purple.svg)](https://dotnet.microsoft.com/)
 [![NuGet](https://img.shields.io/badge/NuGet-v1.0.0--beta-blue.svg)](https://www.nuget.org/packages/AutoAppdater.Net/)
+
 AutoAppdater project for .Net AutoAppdater extension module.
 
 ## License
