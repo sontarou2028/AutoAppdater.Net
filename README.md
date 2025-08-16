@@ -8,4 +8,4 @@ AutoAppdater project for .Net AutoAppdater extension module.
 
 ## License
 
-This project is released under the MIT License. For more information, see the [LICENSE](LICENSE) file.
+This project is released under the MIT License. For more information, see the [LICENSE.md](LICENSE) file.
