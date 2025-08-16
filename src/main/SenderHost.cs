@@ -81,11 +81,14 @@ namespace AutoAppdater.MainSenderHost
         public UInt32 cbData;
         public IntPtr lpData;
     }
+    public static class MainSenderConfig
+    {
+        public static string TargetProcessName { get; set; } = "AutoAppdater";
+        public static string TargetMainWindowName { get; set; } = "MainWindow";
+    }
     internal static class MainSender
     {
         const uint WM_COPYDATA = 0x004A;
-        const string MainProcess_Name = "AutoAppdater";
-        const string MainProcess_MainWindowName = "MainWindow";
         //const int Send_Success = 0;
         const int Send_Error_MainProc_NotFound = -1;
         const int Send_Error_MainProc_IllegalTypeOrVersion = -2;
@@ -94,9 +97,9 @@ namespace AutoAppdater.MainSenderHost
         internal static int Send(CopyData data)
         {
             //check
-            Process[] p = Process.GetProcessesByName(MainProcess_Name);
+            Process[] p = Process.GetProcessesByName(MainSenderConfig.TargetProcessName);
             if (p.Length == 0) return Send_Error_MainProc_NotFound;
-            if (p[0].MainWindowTitle != MainProcess_MainWindowName) return Send_Error_MainProc_IllegalTypeOrVersion;
+            if (p[0].MainWindowTitle != MainSenderConfig.TargetMainWindowName) return Send_Error_MainProc_IllegalTypeOrVersion;
             //obj
             string cobj = JsonSerializer.Serialize(data);
             COPYDATASTRUCT32 cd = new COPYDATASTRUCT32();
@@ -109,9 +112,9 @@ namespace AutoAppdater.MainSenderHost
         public static int Send(CourierData data)
         {
             //check
-            Process[] p = Process.GetProcessesByName(MainProcess_Name);
+            Process[] p = Process.GetProcessesByName(MainSenderConfig.TargetProcessName);
             if (p.Length == 0) return Send_Error_MainProc_NotFound;
-            if (p[0].MainWindowTitle != MainProcess_MainWindowName) return Send_Error_MainProc_IllegalTypeOrVersion;
+            if (p[0].MainWindowTitle != MainSenderConfig.TargetMainWindowName) return Send_Error_MainProc_IllegalTypeOrVersion;
             //obj
             string cobj = JsonSerializer.Serialize(data);
             COPYDATASTRUCT32 cd = new COPYDATASTRUCT32();
