@@ -17,7 +17,8 @@ namespace AutoAppdater.ConsoleHosts
         public string? TargetWindowTitle { get; }
         public int? SizeX { get; }
         public int? SizeY { get; }
-        public ConsoleAuthor(ConsoleType type, string? windowTitle, int? sizeX, int? sizeY)
+        public bool Attatchable{ get; }
+        public ConsoleAuthor(ConsoleType type, string? windowTitle, int? sizeX, int? sizeY, bool attachable)
         {
             if (type == ConsoleType.Internal)
             {
@@ -47,6 +48,7 @@ namespace AutoAppdater.ConsoleHosts
                 if (sizeY != null) throw new Exception();
                 Type = type;
             }
+            Attatchable = attachable;
         }
     }
     internal class ConsoleHost
@@ -57,14 +59,6 @@ namespace AutoAppdater.ConsoleHosts
         internal const int SendInfo_Id_Open = 3;
         internal const int SendInfo_Id_Close = 4;
         internal const int SendInfo_Id_Flush = 5;
-        struct CongifValue
-        {
-
-        }
-        struct DefaultValue
-        {
-
-        }
         ConsoleAuthor Auth;
         SenderAuthor Sender;
         object senderLocker = new object();
@@ -73,7 +67,7 @@ namespace AutoAppdater.ConsoleHosts
             Auth = author;
             Sender = sender;
         }
-        internal int SendInfo(DisplayInfo info)
+        internal int SendInfo(ColumnChangeInfo info)
         {
             lock (senderLocker)
             {
@@ -97,10 +91,19 @@ namespace AutoAppdater.ConsoleHosts
             lock (senderLocker)
                 return MainSender.Send(new CopyData(Sender, null, SystemId.Console, SendInfo_Id_Close, null, null, null, null, null, [Auth]));
         }
+        public int CloseWindow(bool flush)
+        {
+            lock (senderLocker)
+            {
+                int err = MainSender.Send(new CopyData(Sender, null, SystemId.Console, SendInfo_Id_Flush, null, null, null, null, null, [Auth]));
+                if (err != 0) return err;
+                return MainSender.Send(new CopyData(Sender, null, SystemId.Console, SendInfo_Id_Close, null, null, null, null, null, [Auth]));
+            }
+        }
         public int FlushWindow()
         {
             lock (senderLocker)
-            return MainSender.Send(new CopyData(Sender, null, SystemId.Console, SendInfo_Id_Flush, null, null, null, null, null, [Auth]));
+                return MainSender.Send(new CopyData(Sender, null, SystemId.Console, SendInfo_Id_Flush, null, null, null, null, null, [Auth]));
         }
     }
 }

@@ -471,7 +471,7 @@ namespace AutoAppdater.Interfaces
                 return currentSentence;
             }
         }
-        public  string? PasswordInputRequest()
+        public string? PasswordInputRequest()
         {
             lock (stateLocker)
             {
