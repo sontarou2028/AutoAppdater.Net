@@ -8,9 +8,12 @@ namespace AutoAppdater.Consoles
 {
     enum ChangeType : byte
     {
-        Add,
+        Insert,
         Remove,
         Replace,
+        InsertAt,
+        RemoveAt,
+        ReplaceAt,
     }
     internal class ChangeInfo
     {
@@ -42,7 +45,7 @@ namespace AutoAppdater.Consoles
         public ConsoleColor[] SceneColor;
         ///public ConsoleColor?[] DefaultTextFillColorPattern;
         //public ConsoleColor?[] DefaultSceneFillColorPattern;
-        public (int start, int end) ChangeLen;
+        public (int start, int count) ChangeLen;
         public ChangeType ChangeTypes;
         public ColumnChangeInfo(int Priority, string Sentences, /*string PastSentence, */int Column,
         ConsoleColor[] TextColor, ConsoleColor[] SceneColor,
@@ -256,10 +259,15 @@ namespace AutoAppdater.Consoles
         ConsoleColor deft = DefaultValue.color_text;
         public ConsoleColor DefaultTextSceneColor{ get{ return defts; } }
         ConsoleColor defts = DefaultValue.color_scene;
+        bool overTTRepair = false;
         internal Console(ConsoleHost host, int priority)
         {
             this.host = host;
             this.priority = priority;
+        }
+        bool TeropTitleRepair(ColumnInfo info, int index)
+        {
+            
         }
         public bool TitleInsert(int index, int len, string insertValue)
         {
@@ -267,23 +275,28 @@ namespace AutoAppdater.Consoles
             if (len >= texts[index].Text.Length) return false;
             if (index < 0 || len < 0) return false;
             ColumnInfo info = texts[index].ToColumnInfo();
+            if (!texts[index].Insert(insertValue, len, deft, defts))
+            {
+                texts[index] = info;
+                return false;
+            }
             if (texts[index].SetCondition)
             {
-                if (!texts[index].Insert(insertValue, len, deft, defts))
-                {
-                    texts[index] = info;
-                    return false;
-                }
                 bool? b = texts[index].Func(titles.Count, terops.Count, null);
                 int code;
                 if (b == null || b == true)
                 {
                     (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) gcd = texts[index].GetLastChangeSentence;
-                    code = Write(new ColumnChangeInfo(priority, insertValue, index, gcd.TextColor, gcd.TextSceneColor, (len, insertValue.Length), ChangeType.Add));
+                    code = Write(new ColumnChangeInfo(priority, insertValue, index, gcd.TextColor, gcd.TextSceneColor, (len, insertValue.Length), ChangeType.InsertAt));
                     if (code != 0)
                     {
                         texts[index] = info;
                         return false;
+                    }
+                    if (!TeropTitleRepair(texts[index], index))
+                    {
+                        overTTRepair = true;
+                        //return false;
                     }
                     return true;
                 }
@@ -292,6 +305,27 @@ namespace AutoAppdater.Consoles
                 {
                     texts[index] = info;
                     return false;
+                }
+                return true;
+            }
+            else
+            {
+                bool? b = texts[index].Func(titles.Count, terops.Count, null);
+                if (b == true)
+                {
+                    (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) gcd = texts[index].GetLastChangeSentence;
+                    int code = Write(new ColumnChangeInfo(priority, texts[index].Text, index, gcd.TextColor, gcd.TextSceneColor, (0, texts[index].Text.Length), ChangeType.Insert));
+                    if (code != 0)
+                    {
+                        texts[index] = info;
+                        return false;
+                    }
+                    if (!TeropTitleRepair(texts[index], index))
+                    {
+                        overTTRepair = true;
+                        //return false;
+                    }
+                    return true;
                 }
                 return true;
             }
