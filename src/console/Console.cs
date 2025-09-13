@@ -77,48 +77,64 @@ namespace AutoAppdater.Consoles
     }
     class TitleColumnInfo
     {
-        public string? InitTitle;
-        public string? EndTitle;
-        public (int[] value, Func<int, bool>)? InitTitleSetConditions;
-        public (int[] value, Func<int, bool>)? EndTitleSetConditions;
-        public ConsoleColor[]? InitTitleTextColor;
-        public ConsoleColor[]? EndTitleTextColor;
-        public ConsoleColor[]? InitTitleSceneColor;
-        public ConsoleColor[]? EndTitleSceneColor;
-    }
-    class ColumnInfo
-    {
-        internal string Text { get { return text.ToString(); } }
-        internal Func<int, int, int, bool>? TextSetConditions { get { return textSetConditions; } }
-        internal ConsoleColor[] TextColor { get { return textColor.ToArray(); } }
-        internal ConsoleColor[] TextSceneColor { get { return textSceneColor.ToArray(); } }
-        internal bool SetCondition { get { return setCondition; } set { setCondition = value; } }
-        internal (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) GetLastChangeSentence{ get{ return getLCS; } }
-        (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) getLCS = ("",[],[]);
-        string text = "";
-        Func<int, int, int, bool>? textSetConditions = null;//title, terop, text, reesult
-        Func<TeropColumnInfo[], TitleColumnInfo[], ColumnInfo[], int, bool>? textSetConditions1 = null;
-        Func<TitleColumnInfo[]?, ColumnInfo, int, bool>? textSetConditions2 = null;
-        bool setCondition = true;
-        ConsoleColor[] textColor = [];
-        ConsoleColor[] textSceneColor = [];
-        public ColumnInfo() { }
-        internal ColumnInfo(string text, Func<int, int, int, bool>? textSetConditions,
-        bool setCondition, ConsoleColor[] textColor, ConsoleColor[] textSceneColor)
+        internal string InitTitle{ get{ return init.ToString(); } }
+        internal string EndTitle{ get{ return end.ToString(); } }
+        string init = "";
+        string end = "";
+        Func<int, int, int, bool>? initTitleSetConditions = null;//title, terop, text, reesult
+        Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? initTitleSetConditions1 = null;
+        Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? initTitleSetConditions2 = null;
+        Func<int, int, int, bool>? endTitleSetConditions = null;//title, terop, text, reesult
+        Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? endTitleSetConditions1 = null;
+        Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? endTitleSetConditions2 = null;
+        bool initTitleCondition = false;
+        bool endTitleCondition = false;
+        internal ConsoleColor[] InitTitleTextColor { get { return initTextColor; } }
+        internal ConsoleColor[] InitTitleSceneColor{ get{ return initSceneColor; } }
+        internal ConsoleColor[] EndTitleTextColor{ get{ return endTextColor; } }
+        internal ConsoleColor[] EndTitleSceneColor{ get{ return endSceneColor; } }
+        ConsoleColor[] initTextColor = [];
+        ConsoleColor[] initSceneColor = [];
+        ConsoleColor[] endTextColor = [];
+        ConsoleColor[] endSceneColor = [];
+        internal (string InitTitle, ConsoleColor[] InitTitleColor, ConsoleColor[] InitTitleSceneColor) GetLastChangeInitTitle{ get{ return getLcsi; } }
+        internal (string EndTitle, ConsoleColor[] EndTitleColor, ConsoleColor[] EndTitleSceneColor) GetLastChangeEndTitle { get{ return getLcse; } }
+        (string EndTitle, ConsoleColor[] EndTitleColor, ConsoleColor[] EndTitleSceneColor) getLcse;
+        (string InitTitle, ConsoleColor[] InitTitleColor, ConsoleColor[] InitTitleSceneColor) getLcsi;
+        internal TitleColumnInfo() { }
+        internal TitleColumnInfo(string initTitle, string endTitle,
+        Func<int, int, int, bool>? initTitleSetConditions,
+        Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? initTitleSetConditions1,
+        Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? initTitleSetConditions2,
+        Func<int, int, int, bool>? endTitleSetConditions,
+        Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? endTitleSetConditions1,
+        Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? endTitleSetConditions2,
+        bool initTitleCondition, bool endTitleCondition,
+        ConsoleColor[] initTextColor, ConsoleColor[] initSceneColor,
+        ConsoleColor[] endTextColor, ConsoleColor[] endSceneColor)
         {
-            this.text = text;
-            this.textSetConditions = textSetConditions;
-            this.setCondition = setCondition;
-            this.textColor = textColor;
-            this.textSceneColor = textSceneColor;
+            this.init = initTitle;
+            this.end = endTitle;
+            this.initTitleSetConditions = initTitleSetConditions;
+            this.initTitleSetConditions1 = initTitleSetConditions1;
+            this.initTitleSetConditions2 = initTitleSetConditions2;
+            this.endTitleSetConditions = endTitleSetConditions;
+            this.endTitleSetConditions1 = endTitleSetConditions1;
+            this.endTitleSetConditions2 = endTitleSetConditions2;
+            this.initTitleCondition = initTitleCondition;
+            this.endTitleCondition = endTitleCondition;
+            this.initTextColor = initTextColor;
+            this.initSceneColor = initSceneColor;
+            this.endTextColor = endTextColor;
+            this.endSceneColor = endSceneColor;
         }
         internal bool? Func(int titleLen, int teropLen,
-        TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, ColumnInfo[] columnInfos,
+        TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, TextColumnInfo[] columnInfos,
         TitleColumnInfo[]? activeTitleColumnInfos)
         {
             bool? b = Func(titleLen, teropLen, text.Length);
             bool? b1 = Func(teropCoumnInfos, titleColumnInfos, columnInfos, text.Length);
-            bool? b2 = Func(activeTitleColumnInfos, ToColumnInfo(), text.Length);
+            bool? b2 = Func(activeTitleColumnInfos, ToTextColumnInfo(), text.Length);
             if (b == null && b1 == null && b2 == null) return null;
             else if (b == true || b1 == true || b2 == true)
             {
@@ -136,25 +152,365 @@ namespace AutoAppdater.Consoles
             if (textSetConditions == null) return null;
             return textSetConditions(titleLen, teropLen, text.Length);
         }
-        bool? Func(TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, ColumnInfo[] columnInfos, int? textLen)
+        bool? Func(TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, TextColumnInfo[] columnInfos, int? textLen)
         {
             if (textSetConditions1 == null) return null;
             return textSetConditions1(teropCoumnInfos,titleColumnInfos,columnInfos,text.Length);
         }
-        bool? Func(TitleColumnInfo[]? titleColumnInfo,ColumnInfo? columnInfo,int? textLen)
+        bool? Func(TitleColumnInfo[]? titleColumnInfo,TextColumnInfo? columnInfo,int? textLen)
         {
             if (textSetConditions2 == null) return null;
-            return textSetConditions2(titleColumnInfo,ToColumnInfo(),text.Length);
+            return textSetConditions2(titleColumnInfo,ToTextColumnInfo(),text.Length);
+        }
+        internal void ReplaceFuncInit(Func<int, int, int, bool>? newContitions)
+        {
+            initTitleSetConditions = newContitions;
+        }
+        internal void ReplaceFuncInit(Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? newContitions)
+        {
+            initTitleSetConditions1 = newContitions;
+        }
+        internal void ReplaceFuncInit(Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? newContitions)
+        {
+            initTitleSetConditions2 = newContitions;
+        }
+        internal void ReplaceFuncEnd(Func<int, int, int, bool>? newContitions)
+        {
+            endTitleSetConditions = newContitions;
+        }
+        internal void ReplaceFuncEnd(Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? newContitions)
+        {
+            endTitleSetConditions1 = newContitions;
+        }
+        internal void ReplaceFuncEnd(Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? newContitions)
+        {
+            endTitleSetConditions2 = newContitions;
+        }
+        internal void RemoveFunc()
+        {
+            initTitleSetConditions = null;
+            initTitleSetConditions1 = null;
+            initTitleSetConditions2 = null;
+            endTitleSetConditions = null;
+            endTitleSetConditions1 = null;
+            endTitleSetConditions2 = null;
+        }
+        internal bool RemoveInit(int length, int count)
+        {
+            if (init.Length < length + count || length < 0 || count < 0) return false;
+            ConsoleColor[] tc = new ConsoleColor[count];
+            ConsoleColor[] tsc = new ConsoleColor[count];
+            Array.Copy(initTextColor, length, tc, 0, count);
+            Array.Copy(initSceneColor, length, tsc, 0, count);
+            getLcsi = (init.Substring(length, count), tc.ToArray(), tsc.ToArray());
+            tc = new ConsoleColor[initTextColor.Length - length - count];
+            tsc = new ConsoleColor[initSceneColor.Length - length - count];
+            Array.Copy(initTextColor, length + count, tc, 0, initTextColor.Length - length - count);
+            Array.Copy(initSceneColor, length + count, tc, 0, initSceneColor.Length - length - count);
+            Array.Resize(ref initTextColor, initTextColor.Length - count);
+            Array.Resize(ref initSceneColor, initSceneColor.Length - count);
+            Array.Copy(tc, 0, initTextColor, length, initTextColor.Length - length - count);
+            Array.Copy(tsc, 0, initSceneColor, length, initSceneColor.Length - length - count);
+            init = init.Remove(length,count);
+            return true;
+        }
+        internal bool RemoveEnd(int length, int count)
+        {
+            if (end.Length < length + count || length < 0 || count < 0) return false;
+            ConsoleColor[] tc = new ConsoleColor[count];
+            ConsoleColor[] tsc = new ConsoleColor[count];
+            Array.Copy(endTextColor, length, tc, 0, count);
+            Array.Copy(endSceneColor, length, tsc, 0, count);
+            getLcse = (end.Substring(length, count), tc.ToArray(), tsc.ToArray());
+            tc = new ConsoleColor[endTextColor.Length - length - count];
+            tsc = new ConsoleColor[endSceneColor.Length - length - count];
+            Array.Copy(endTextColor, length + count, tc, 0, endTextColor.Length - length - count);
+            Array.Copy(endSceneColor, length + count, tc, 0, endSceneColor.Length - length - count);
+            Array.Resize(ref endTextColor, endTextColor.Length - count);
+            Array.Resize(ref endSceneColor, endSceneColor.Length - count);
+            Array.Copy(tc, 0, endTextColor, length, endTextColor.Length - length - count);
+            Array.Copy(tsc, 0, endSceneColor, length, endSceneColor.Length - length - count);
+            end = end.Remove(length,count);
+            return true;
+        }
+        internal void RemoveAllInit()
+        {
+            getLcsi = (init.ToString(),initTextColor.ToArray(),initSceneColor.ToArray());
+            init = "";
+            initTextColor = [];
+            initSceneColor = [];
+        }
+        internal void RemoveAllEnd()
+        {
+            getLcse = (init.ToString(),initTextColor.ToArray(),initSceneColor.ToArray());
+            end = "";
+            endTextColor = [];
+            endSceneColor = [];
+        }
+        internal void RemoveAll()
+        {
+            getLcsi = (init.ToString(),initTextColor.ToArray(),initSceneColor.ToArray());
+            init = "";
+            initTextColor = [];
+            initSceneColor = [];
+            getLcse = (init.ToString(),initTextColor.ToArray(),initSceneColor.ToArray());
+            end = "";
+            endTextColor = [];
+            endSceneColor = [];
+        }
+        internal void ReplaceInit(string text, ConsoleColor textFillColor, ConsoleColor sceneFillColor)
+        {
+            ConsoleColor[] tc = new ConsoleColor[text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[text.Length];
+            Array.Fill(tc, textFillColor);
+            Array.Fill(tsc, sceneFillColor);
+            init = text;
+            initTextColor = tc;
+            endSceneColor = tsc;
+            getLcsi = (text.ToString(), tc, tsc);
+        }
+        internal bool ReplaceInit(string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+        {
+            if (text.Length != textColor.Length || text.Length != sceneColor.Length) return false;
+            init = text;
+            initTextColor = textColor;
+            initSceneColor = sceneColor;
+            getLcsi = (text.ToString(), textColor.ToArray(), sceneColor.ToArray());
+            return true;
+        }
+        internal void ReplaceEnd(string text, ConsoleColor textFillColor, ConsoleColor sceneFillColor)
+        {
+            ConsoleColor[] tc = new ConsoleColor[text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[text.Length];
+            Array.Fill(tc, textFillColor);
+            Array.Fill(tsc, sceneFillColor);
+            end = text;
+            endTextColor = tc;
+            endSceneColor = tsc;
+            getLcse = (text.ToString(), tc, tsc);
+        }
+        internal bool ReplaceEnd(string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+        {
+            if (text.Length != textColor.Length || text.Length != sceneColor.Length) return false;
+            end = text;
+            endTextColor = textColor;
+            endSceneColor = sceneColor;
+            getLcse = (text.ToString(), textColor.ToArray(), sceneColor.ToArray());
+            return true;
+        }
+        internal void AddInit(string text, ConsoleColor textFillColor, ConsoleColor sceneFillColor)
+        {
+            ConsoleColor[] tc = new ConsoleColor[text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[text.Length];
+            Array.Fill(tc, textFillColor);
+            Array.Fill(tsc, sceneFillColor);
+            int len = init.Length;
+            init += text;
+            Array.Resize(ref initTextColor, init.Length);
+            Array.Resize(ref initSceneColor, init.Length);
+            Array.Copy(tc, 0, initTextColor, len, tc.Length);
+            Array.Copy(tsc, 0, initSceneColor, len, tsc.Length);
+            getLcsi = (text.ToString(), tc, tsc);
+        }
+        internal bool AddInit(string text, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+        {
+            if (text.Length != textColor.Length || text.Length != sceneColor.Length) return false;
+            int len = init.Length;
+            init += text;
+            Array.Resize(ref this.initTextColor, init.Length);
+            Array.Resize(ref initSceneColor, init.Length);
+            Array.Copy(textColor, 0, initTextColor, len, textColor.Length);
+            Array.Copy(sceneColor, 0, initSceneColor, len, sceneColor.Length);
+            getLcsi = (text.ToString(),textColor.ToArray(),sceneColor.ToArray());
+            return true;
+        }
+        internal void AddEnd(string text, ConsoleColor textFillColor, ConsoleColor sceneFillColor)
+        {
+            ConsoleColor[] tc = new ConsoleColor[text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[text.Length];
+            Array.Fill(tc, textFillColor);
+            Array.Fill(tsc, sceneFillColor);
+            int len = end.Length;
+            end += text;
+            Array.Resize(ref endTextColor, end.Length);
+            Array.Resize(ref endSceneColor, end.Length);
+            Array.Copy(tc, 0, endTextColor, len, tc.Length);
+            Array.Copy(tsc, 0, endSceneColor, len, tsc.Length);
+            getLcse = (text.ToString(), tc, tsc);
+        }
+        internal bool AddEnd(string text, ConsoleColor[] textColor, ConsoleColor[] sceneCoslor)
+        {
+            if (text.Length != textColor.Length || text.Length != sceneColor.Length) return false;
+            int len = end.Length;
+            end += text;
+            Array.Resize(ref endTextColor, end.Length);
+            Array.Resize(ref endSceneColor, end.Length);
+            Array.Copy(textColor, 0, endTextColor, len, textColor.Length);
+            Array.Copy(sceneColor, 0, endSceneColor, len, sceneColor.Length);
+            getLcse = (text.ToString(),textColor.ToArray(),sceneColor.ToArray());
+            return true;
+        }
+        internal bool InsertInit(string text, int length, ConsoleColor textFillColor, ConsoleColor sceneFillColor)
+        {
+            if (text.Length < length || length < 0) return false;
+            ConsoleColor[] tcf = new ConsoleColor[text.Length];
+            ConsoleColor[] tscf = new ConsoleColor[text.Length];
+            Array.Fill(tcf, textFillColor);
+            Array.Fill(tscf, sceneFillColor);
+            getLcsi = (text.ToString(), tcf.ToArray(), tscf.ToArray());
+            init = init.Insert(length, text);
+            ConsoleColor[] tc = new ConsoleColor[initTextColor.Length - length - text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[initSceneColor.Length - length - text.Length];
+            Array.Copy(initTextColor, length, tc, 0, initTextColor.Length - length);
+            Array.Copy(initSceneColor, length, tsc, 0, initSceneColor.Length - length);
+            Array.Resize(ref initTextColor, init.Length);
+            Array.Resize(ref initSceneColor, init.Length);
+            Array.Copy(tcf, 0, initTextColor, length, tcf.Length);
+            Array.Copy(tscf, 0, initSceneColor, length, tscf.Length);
+            Array.Copy(tc, 0, initTextColor, length + text.Length, tc.Length);
+            Array.Copy(tsc, 0, initSceneColor, length + text.Length, tsc.Length);
+            return true;
+        }
+        internal bool InsertInit(string text, int length, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+        {
+            if (text.Length != textColor.Length || text.Length != sceneColor.Length ||
+            text.Length < length || length < 0) return false;
+            getLcsi = (text.ToString(), textColor.ToArray(), sceneColor.ToArray());
+            init = init.Insert(length, text);
+            ConsoleColor[] tc = new ConsoleColor[initTextColor.Length - length - text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[initSceneColor.Length - length - text.Length];
+            Array.Copy(initTextColor, length, tc, 0, initTextColor.Length - length);
+            Array.Copy(initSceneColor, length, tsc, 0, initSceneColor.Length - length);
+            Array.Resize(ref initTextColor, init.Length);
+            Array.Resize(ref initSceneColor, init.Length);
+            Array.Copy(textColor, 0, initTextColor, length, textColor.Length);
+            Array.Copy(sceneColor, 0, initSceneColor, length, sceneColor.Length);
+            Array.Copy(tc, 0, initTextColor, length + text.Length, tc.Length);
+            Array.Copy(tsc, 0, initSceneColor, length + text.Length, tsc.Length);
+            return true;
+        }
+        internal bool InsertEnd(string text, int length, ConsoleColor textFillColor, ConsoleColor SceneFillColor)
+        {
+            if (text.Length < length || length < 0) return false;
+            ConsoleColor[] tcf = new ConsoleColor[text.Length];
+            ConsoleColor[] tscf = new ConsoleColor[text.Length];
+            Array.Fill(tcf, textFillColor);
+            Array.Fill(tscf, SceneFillColor);
+            getLcse = (text.ToString(), tcf.ToArray(), tscf.ToArray());
+            end = end.Insert(length, text);
+            ConsoleColor[] tc = new ConsoleColor[endTextColor.Length - length - text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[endSceneColor.Length - length - text.Length];
+            Array.Copy(endTextColor, length, tc, 0, endTextColor.Length - length);
+            Array.Copy(endSceneColor, length, tsc, 0, endSceneColor.Length - length);
+            Array.Resize(ref endTextColor, end.Length);
+            Array.Resize(ref endSceneColor, end.Length);
+            Array.Copy(tcf, 0, endTextColor, length, tcf.Length);
+            Array.Copy(tscf, 0, endSceneColor, length, tscf.Length);
+            Array.Copy(tc, 0, endTextColor, length + text.Length, tc.Length);
+            Array.Copy(tsc, 0, endSceneColor, length + text.Length, tsc.Length);
+            return true;
+        }
+        internal bool InsertEnd(string text, int length, ConsoleColor[] textColor, ConsoleColor[] sceneColor)
+        {
+            if (text.Length != textColor.Length || text.Length != sceneColor.Length ||
+            text.Length < length || length < 0) return false;
+            getLcse = (text.ToString(), textColor.ToArray(), sceneColor.ToArray());
+            end = end.Insert(length, text);
+            ConsoleColor[] tc = new ConsoleColor[endTextColor.Length - length - text.Length];
+            ConsoleColor[] tsc = new ConsoleColor[endSceneColor.Length - length - text.Length];
+            Array.Copy(endTextColor, length, tc, 0, endTextColor.Length - length);
+            Array.Copy(endSceneColor, length, tsc, 0, endSceneColor.Length - length);
+            Array.Resize(ref endTextColor, end.Length);
+            Array.Resize(ref endSceneColor, end.Length);
+            Array.Copy(textColor, 0, endTextColor, length, textColor.Length);
+            Array.Copy(sceneColor, 0, endSceneColor, length, sceneColor.Length);
+            Array.Copy(tc, 0, endTextColor, length + text.Length, tc.Length);
+            Array.Copy(tsc, 0, endSceneColor, length + text.Length, tsc.Length);
+            return true;
+        }
+        public TitleColumnInfo ToTitleColumnInfo()
+        {
+            return new TitleColumnInfo(init,end,
+            initTitleSetConditions,initTitleSetConditions1,initTitleSetConditions2,
+            endTitleSetConditions,endTitleSetConditions1,endTitleSetConditions2,
+            initTitleCondition,endTitleCondition,
+            initTextColor,initSceneColor,endTextColor,endSceneColor);
+        }
+    }
+    class TextColumnInfo
+    {
+        internal string Text { get { return text.ToString(); } }
+        internal Func<int, int, int, bool>? TextSetConditions { get { return textSetConditions; } }
+        internal ConsoleColor[] TextColor { get { return textColor.ToArray(); } }
+        internal ConsoleColor[] TextSceneColor { get { return textSceneColor.ToArray(); } }
+        internal bool SetCondition { get { return setCondition; } set { setCondition = value; } }
+        internal (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) GetLastChangeSentence{ get{ return getLCS; } }
+        (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) getLCS = ("",[],[]);
+        string text = "";
+        Func<int, int, int, bool>? textSetConditions = null;//title, terop, text, reesult
+        Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? textSetConditions1 = null;
+        Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? textSetConditions2 = null;
+        bool setCondition = true;
+        ConsoleColor[] textColor = [];
+        ConsoleColor[] textSceneColor = [];
+        public TextColumnInfo() { }
+        internal TextColumnInfo(string text,
+        Func<int, int, int, bool>? textSetConditions,
+        Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? textSetConditions1,
+        Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? textSetConditions2, 
+        bool setCondition, ConsoleColor[] textColor, ConsoleColor[] textSceneColor)
+        {
+            this.text = text;
+            this.textSetConditions = textSetConditions;
+            this.textSetConditions1 = textSetConditions1;
+            this.textSetConditions2 = textSetConditions2;
+            this.setCondition = setCondition;
+            this.textColor = textColor;
+            this.textSceneColor = textSceneColor;
+        }
+        internal bool? Func(int titleLen, int teropLen,
+        TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, TextColumnInfo[] columnInfos,
+        TitleColumnInfo[]? activeTitleColumnInfos)
+        {
+            bool? b = Func(titleLen, teropLen, text.Length);
+            bool? b1 = Func(teropCoumnInfos, titleColumnInfos, columnInfos, text.Length);
+            bool? b2 = Func(activeTitleColumnInfos, ToTextColumnInfo(), text.Length);
+            if (b == null && b1 == null && b2 == null) return null;
+            else if (b == true || b1 == true || b2 == true)
+            {
+                setCondition = true;
+                return true;
+            }
+            else
+            {
+                setCondition = false;
+                return false;
+            }
+        }
+        bool? Func(int titleLen, int teropLen, int? textLen)
+        {
+            if (textSetConditions == null) return null;
+            return textSetConditions(titleLen, teropLen, text.Length);
+        }
+        bool? Func(TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, TextColumnInfo[] columnInfos, int? textLen)
+        {
+            if (textSetConditions1 == null) return null;
+            return textSetConditions1(teropCoumnInfos,titleColumnInfos,columnInfos,text.Length);
+        }
+        bool? Func(TitleColumnInfo[]? titleColumnInfo,TextColumnInfo? columnInfo,int? textLen)
+        {
+            if (textSetConditions2 == null) return null;
+            return textSetConditions2(titleColumnInfo,ToTextColumnInfo(),text.Length);
         }
         internal void ReplaceFunc(Func<int, int, int, bool>? newContitions)
         {
             textSetConditions = newContitions;
         }
-        internal void ReplaceFunc(Func<TeropColumnInfo[], TitleColumnInfo[], ColumnInfo[], int, bool>? newContitions)
+        internal void ReplaceFunc(Func<TeropColumnInfo[], TitleColumnInfo[], TextColumnInfo[], int, bool>? newContitions)
         {
             textSetConditions1 = newContitions;
         }
-        internal void ReplaceFunc(Func<TitleColumnInfo[]?, ColumnInfo, int, bool>? newContitions)
+        internal void ReplaceFunc(Func<TitleColumnInfo[]?, TextColumnInfo, int, bool>? newContitions)
         {
             textSetConditions2 = newContitions;
         }
@@ -275,9 +631,9 @@ namespace AutoAppdater.Consoles
             Array.Copy(tsc, 0, this.textSceneColor, length + text.Length, tsc.Length);
             return true;
         }
-        public ColumnInfo ToColumnInfo()
+        public TextColumnInfo ToTextColumnInfo()
         {
-            return new ColumnInfo(text,textSetConditions,setCondition,textColor,textSceneColor);
+            return new TextColumnInfo(text,textSetConditions,textSetConditions1,textSetConditions2,setCondition,textColor,textSceneColor);
         }
     }
     public class Console
@@ -293,7 +649,7 @@ namespace AutoAppdater.Consoles
         public int AllColumnCount { get; } = 0;
         internal List<TeropColumnInfo> terops = [];
         internal List<TitleColumnInfo> titles = [];
-        internal List<ColumnInfo> texts = [];//title>text<title
+        internal List<TextColumnInfo> texts = [];//title>text<title
         internal ConsoleHost host;
         public ConsoleColor DefaultTextColor{ get{ return deft; } }
         ConsoleColor deft = DefaultValue.color_text;
@@ -305,7 +661,7 @@ namespace AutoAppdater.Consoles
             this.host = host;
             this.priority = priority;
         }
-        bool TeropTitleRepair(ColumnInfo info, int index)
+        bool TeropTitleRepair(TextColumnInfo info, int index)
         {
             
         }
@@ -314,7 +670,7 @@ namespace AutoAppdater.Consoles
             if (index >= texts.Count) return false;
             if (len >= texts[index].Text.Length) return false;
             if (index < 0 || len < 0) return false;
-            ColumnInfo info = texts[index].ToColumnInfo();
+            TextColumnInfo info = texts[index].ToTextColumnInfo();
             if (!texts[index].Insert(insertValue, len, deft, defts))
             {
                 texts[index] = info;
@@ -322,7 +678,7 @@ namespace AutoAppdater.Consoles
             }
             if (texts[index].SetCondition)
             {
-                bool? b = texts[index].Func(titles.Count, terops.Count, null);
+                bool? b = texts[index].Func(titles.Count, terops.Count, terops.ToArray(),titles.ToArray(),texts.ToArray(),);
                 int code;
                 if (b == null || b == true)
                 {
@@ -350,7 +706,7 @@ namespace AutoAppdater.Consoles
             }
             else
             {
-                bool? b = texts[index].Func(titles.Count, terops.Count, null);
+                bool? b = texts[index].Func(titles.Count, terops.Count, terops.ToArray(),titles.ToArray(),texts.ToArray(),);
                 if (b == true)
                 {
                     (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) gcd = texts[index].GetLastChangeSentence;
