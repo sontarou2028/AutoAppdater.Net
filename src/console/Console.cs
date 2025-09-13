@@ -97,6 +97,8 @@ namespace AutoAppdater.Consoles
         (string Text, ConsoleColor[] TextColor, ConsoleColor[] TextSceneColor) getLCS = ("",[],[]);
         string text = "";
         Func<int, int, int, bool>? textSetConditions = null;//title, terop, text, reesult
+        Func<TeropColumnInfo[], TitleColumnInfo[], ColumnInfo[], int, bool>? textSetConditions1 = null;
+        Func<TitleColumnInfo[]?, ColumnInfo, int, bool>? textSetConditions2 = null;
         bool setCondition = true;
         ConsoleColor[] textColor = [];
         ConsoleColor[] textSceneColor = [];
@@ -110,19 +112,57 @@ namespace AutoAppdater.Consoles
             this.textColor = textColor;
             this.textSceneColor = textSceneColor;
         }
-        internal bool? Func(int titleLen, int teropLen, int? textLen)
+        internal bool? Func(int titleLen, int teropLen,
+        TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, ColumnInfo[] columnInfos,
+        TitleColumnInfo[]? activeTitleColumnInfos)
+        {
+            bool? b = Func(titleLen, teropLen, text.Length);
+            bool? b1 = Func(teropCoumnInfos, titleColumnInfos, columnInfos, text.Length);
+            bool? b2 = Func(activeTitleColumnInfos, ToColumnInfo(), text.Length);
+            if (b == null && b1 == null && b2 == null) return null;
+            else if (b == true || b1 == true || b2 == true)
+            {
+                setCondition = true;
+                return true;
+            }
+            else
+            {
+                setCondition = false;
+                return false;
+            }
+        }
+        bool? Func(int titleLen, int teropLen, int? textLen)
         {
             if (textSetConditions == null) return null;
-            setCondition = textSetConditions(titleLen, teropLen, text.Length);
-            return setCondition;
+            return textSetConditions(titleLen, teropLen, text.Length);
         }
-        internal void ReplaceFunc(Func<int, int, int, bool> newContitions)
+        bool? Func(TeropColumnInfo[] teropCoumnInfos, TitleColumnInfo[] titleColumnInfos, ColumnInfo[] columnInfos, int? textLen)
+        {
+            if (textSetConditions1 == null) return null;
+            return textSetConditions1(teropCoumnInfos,titleColumnInfos,columnInfos,text.Length);
+        }
+        bool? Func(TitleColumnInfo[]? titleColumnInfo,ColumnInfo? columnInfo,int? textLen)
+        {
+            if (textSetConditions2 == null) return null;
+            return textSetConditions2(titleColumnInfo,ToColumnInfo(),text.Length);
+        }
+        internal void ReplaceFunc(Func<int, int, int, bool>? newContitions)
         {
             textSetConditions = newContitions;
+        }
+        internal void ReplaceFunc(Func<TeropColumnInfo[], TitleColumnInfo[], ColumnInfo[], int, bool>? newContitions)
+        {
+            textSetConditions1 = newContitions;
+        }
+        internal void ReplaceFunc(Func<TitleColumnInfo[]?, ColumnInfo, int, bool>? newContitions)
+        {
+            textSetConditions2 = newContitions;
         }
         internal void RemoveFunc()
         {
             textSetConditions = null;
+            textSetConditions1 = null;
+            textSetConditions2 = null;
         }
         internal bool Remove(int length, int count)
         {
@@ -269,7 +309,7 @@ namespace AutoAppdater.Consoles
         {
             
         }
-        public bool TitleInsert(int index, int len, string insertValue)
+        public bool TextInsert(int index, int len, string insertValue)
         {
             if (index >= texts.Count) return false;
             if (len >= texts[index].Text.Length) return false;
