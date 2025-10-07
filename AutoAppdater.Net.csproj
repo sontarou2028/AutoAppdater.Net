@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net9.0</TargetFramework>
-    <Platforms>x64</Platforms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Discription>Class library reference for AutoAppdater Extension Module</Discription>
     <Nullable>enable</Nullable>
